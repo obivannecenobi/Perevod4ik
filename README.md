@@ -13,3 +13,6 @@
 - Шрифты: `Cattedrale[RUSbypenka220]-Regular.ttf`, `Inter-VariableFont_opsz,wght.ttf`.
 - Иконки и изображения: `сохранить.png`, `настройки.png`, `лого.jpg`, `лого 1.jpg`, `лого 2.png`.
 
+
+## Лицензия
+Этот проект распространяется по лицензии MIT. Подробности см. в файле [LICENSE](LICENSE).
