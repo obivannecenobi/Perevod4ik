@@ -13,3 +13,22 @@
 - Шрифты: `Cattedrale[RUSbypenka220]-Regular.ttf`, `Inter-VariableFont_opsz,wght.ttf`.
 - Иконки и изображения: `сохранить.png`, `настройки.png`, `лого.jpg`, `лого 1.jpg`, `лого 2.png`.
 
+
+## Установка зависимостей
+
+```bash
+pip install -r requirements.txt
+```
+
+## Запуск приложения
+
+```bash
+python -m app.main
+```
+
+## Настройка
+
+Параметры API-ключей и путей к ресурсам задаются в файле [app/settings.py](app/settings.py).
+По умолчанию значения читаются из переменных окружения `OPENAI_API_KEY`,
+`DEEPL_API_KEY`, `MODEL_PATH` и `DATA_PATH`. При необходимости их можно указать
+непосредственно в файле.
