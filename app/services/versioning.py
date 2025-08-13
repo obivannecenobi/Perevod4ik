@@ -68,3 +68,26 @@ def check_for_updates(repo_path: Path) -> bool:
         return "behind" in status.stdout.lower()
     except Exception:
         return False
+
+
+def pull_updates(repo_path: Path) -> tuple[bool, str]:
+    """Attempt to update *repo_path* by pulling from the remote.
+
+    Returns a tuple ``(success, message)`` describing the result.
+    """
+
+    try:
+        result = subprocess.run(
+            ["git", "pull"],
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        message = result.stdout.strip() or "Repository updated successfully."
+        return True, message
+    except subprocess.CalledProcessError as exc:
+        message = exc.stderr.strip() or "git pull failed"
+        return False, message
+    except Exception as exc:  # pragma: no cover - unexpected errors
+        return False, str(exc)
