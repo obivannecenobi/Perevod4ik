@@ -16,6 +16,7 @@ from services.glossary import (
     rename_glossary,
 )
 from settings import AppSettings, SettingsDialog
+from services.synonyms import fetch_synonyms
 from .diff_utils import DiffHighlighter
 
 
@@ -82,6 +83,12 @@ class Ui_MainWindow(object):
         self.translation_label = QtWidgets.QLabel(parent=self.translation_widget)
         self.translation_label.setFont(QtGui.QFont(styles.HEADER_FONT, 14))
         self.translation_edit = QtWidgets.QTextEdit(parent=self.translation_widget)
+        self.translation_edit.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        self.translation_edit.customContextMenuRequested.connect(
+            self._show_synonym_menu
+        )
         self.translation_counter = QtWidgets.QLabel("0", parent=self.translation_widget)
         self.translation_counter.setObjectName("counter")
         self.translation_counter.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
@@ -237,6 +244,33 @@ class Ui_MainWindow(object):
             self.diff_highlighter.set_base(text)
         self.version_manager.add_version(text)
         self.diff_highlighter.update_diff()
+
+    def _show_synonym_menu(self, pos: QtCore.QPoint) -> None:
+        cursor = self.translation_edit.cursorForPosition(pos)
+        if not cursor.hasSelection():
+            cursor.select(QtGui.QTextCursor.SelectionType.WordUnderCursor)
+        word = cursor.selectedText().strip()
+        if not word:
+            return
+        synonyms = fetch_synonyms(word)
+        if not synonyms:
+            return
+        menu = QtWidgets.QMenu(self.translation_edit)
+        for syn in synonyms:
+            action = menu.addAction(syn)
+            action.triggered.connect(
+                lambda checked=False, s=syn, c=QtGui.QTextCursor(cursor):
+                    self._replace_with_synonym(c, s)
+            )
+        menu.exec(self.translation_edit.mapToGlobal(pos))
+
+    def _replace_with_synonym(
+        self, cursor: QtGui.QTextCursor, synonym: str
+    ) -> None:
+        cursor.beginEditBlock()
+        cursor.removeSelectedText()
+        cursor.insertText(synonym)
+        cursor.endEditBlock()
 
     def _open_settings(self) -> None:
         dialog = SettingsDialog(self.settings, self.centralwidget)
