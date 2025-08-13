@@ -15,6 +15,18 @@ ACCENT_COLOR = "#00E5FF"
 INTER_FONT = "Inter"
 HEADER_FONT = "Cattedrale"
 
+# QSS rule that highlights widgets when hovered or focused
+FOCUS_HOVER_RULE = f"""
+QTextEdit:focus,
+QTextEdit:hover,
+QLineEdit:focus,
+QLineEdit:hover,
+QTableWidget#glossary:focus,
+QTableWidget#glossary:hover {{
+    border: 1px solid {ACCENT_COLOR};
+}}
+""".strip()
+
 
 def init() -> None:
     """Load bundled fonts and expose their family names.
