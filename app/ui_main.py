@@ -48,9 +48,13 @@ class Ui_MainWindow(object):
         self.prev_btn = QtWidgets.QPushButton(parent=self.centralwidget)
         self.chapter_combo = QtWidgets.QComboBox(parent=self.centralwidget)
         self.next_btn = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.model_combo = QtWidgets.QComboBox(parent=self.centralwidget)
+        self.save_btn = QtWidgets.QPushButton(parent=self.centralwidget)
         self.nav_layout.addWidget(self.prev_btn)
         self.nav_layout.addWidget(self.chapter_combo)
         self.nav_layout.addWidget(self.next_btn)
+        self.nav_layout.addWidget(self.model_combo)
+        self.nav_layout.addWidget(self.save_btn)
         self.main_layout.addLayout(self.nav_layout)
 
         # Splitter separating original and translation/glossary
@@ -447,6 +451,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "Main Window"))
         self.prev_btn.setText(_translate("MainWindow", "⦉"))
         self.next_btn.setText(_translate("MainWindow", "⦊"))
+        self.save_btn.setText(_translate("MainWindow", "Сохранить"))
         self.original_label.setText(_translate("MainWindow", "Оригинал"))
         self.translation_label.setText(_translate("MainWindow", "Перевод"))
         self.undo_btn.setText(_translate("MainWindow", "Назад"))
