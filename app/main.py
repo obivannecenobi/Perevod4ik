@@ -68,7 +68,13 @@ class MainController:
         self.ui.chapter_combo.currentIndexChanged.connect(self.load_chapter)
 
         # model selection and saving
-        self.ui.model_combo.addItems(sorted(_MODELS.keys()))
+        models = [
+            name
+            for name in sorted(_MODELS.keys())
+            if getattr(self.settings, f"{name}_key", "")
+        ]
+        self.ui.model_combo.clear()
+        self.ui.model_combo.addItems(models)
         if self.settings.model:
             idx = self.ui.model_combo.findText(self.settings.model)
             if idx != -1:
@@ -161,7 +167,7 @@ class MainController:
         prompt = self.ui.mini_prompt_edit.toPlainText().strip()
         glossary = self._parse_glossary()
         try:
-            model = get_translator(self.settings.model or "gemini")
+            model = get_translator(self.settings.model or "gemini", self.settings)
         except Exception as exc:  # pragma: no cover - settings misuse
             QtWidgets.QMessageBox.critical(self.window, "Ошибка", str(exc))
             return
@@ -212,7 +218,7 @@ class MainController:
         prompt = self.ui.mini_prompt_edit.toPlainText().strip()
         glossary = self._parse_glossary()
         try:
-            model = get_translator(self.settings.model or "gemini")
+            model = get_translator(self.settings.model or "gemini", self.settings)
         except Exception as exc:  # pragma: no cover - settings misuse
             QtWidgets.QMessageBox.critical(self.window, "Ошибка", str(exc))
             self._process_queue()

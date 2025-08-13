@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict
 import json
 from urllib import error, request
-
-from settings import AppSettings
-
 
 class GeminiTranslator:
     """Translate text using Google's Gemini models."""
@@ -17,11 +14,10 @@ class GeminiTranslator:
         "gemini-pro:generateContent"
     )
 
-    def __init__(self, api_key: Optional[str] = None) -> None:
-        settings = AppSettings.load()
-        self.api_key = api_key or settings.api_key
+    def __init__(self, api_key: str) -> None:
+        self.api_key = api_key
         if not self.api_key:
-            raise ValueError("Gemini API key not found in settings")
+            raise ValueError("Gemini API key not provided")
 
     # ------------------------------------------------------------------
     def translate(

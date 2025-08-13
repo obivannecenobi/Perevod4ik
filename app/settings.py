@@ -20,8 +20,14 @@ class AppSettings:
         Folder containing original chapters.
     translation_path:
         Folder where translated chapters and metadata are stored.
-    api_key:
-        Key for accessing external translation services.
+    gemini_key:
+        API key for the Gemini model.
+    deepl_key:
+        API key for the DeepL service.
+    grok_key:
+        API key for xAI's Grok model.
+    qwen_key:
+        API key for the Qwen model.
     model:
         Identifier of the LLM or translation model in use.
     synonym_provider:
@@ -45,7 +51,10 @@ class AppSettings:
 
     original_path: str = ""
     translation_path: str = ""
-    api_key: str = ""
+    gemini_key: str = ""
+    deepl_key: str = ""
+    grok_key: str = ""
+    qwen_key: str = ""
     model: str = ""
     synonym_provider: str = "datamuse"
     machine_check: bool = False
@@ -67,7 +76,10 @@ class AppSettings:
         qs = QtCore.QSettings(str(file_path), QtCore.QSettings.Format.IniFormat)
         qs.setValue("original_path", self.original_path)
         qs.setValue("translation_path", self.translation_path)
-        qs.setValue("api_key", self.api_key)
+        qs.setValue("gemini_key", self.gemini_key)
+        qs.setValue("deepl_key", self.deepl_key)
+        qs.setValue("grok_key", self.grok_key)
+        qs.setValue("qwen_key", self.qwen_key)
         qs.setValue("model", self.model)
         qs.setValue("synonym_provider", self.synonym_provider)
         qs.setValue("machine_check", self.machine_check)
@@ -91,7 +103,10 @@ class AppSettings:
         obj = cls(
             original_path=qs.value("original_path", "", str),
             translation_path=qs.value("translation_path", "", str),
-            api_key=qs.value("api_key", "", str),
+            gemini_key=qs.value("gemini_key", "", str),
+            deepl_key=qs.value("deepl_key", "", str),
+            grok_key=qs.value("grok_key", "", str),
+            qwen_key=qs.value("qwen_key", "", str),
             model=qs.value("model", "", str),
             synonym_provider=qs.value("synonym_provider", "datamuse", str),
             machine_check=qs.value("machine_check", False, bool),
@@ -136,7 +151,10 @@ class SettingsDialog(QtWidgets.QDialog):
         trans_layout.addWidget(self.translation_edit)
         trans_layout.addWidget(trans_btn)
 
-        self.api_key_edit = QtWidgets.QLineEdit(settings.api_key)
+        self.gemini_key_edit = QtWidgets.QLineEdit(settings.gemini_key)
+        self.deepl_key_edit = QtWidgets.QLineEdit(settings.deepl_key)
+        self.grok_key_edit = QtWidgets.QLineEdit(settings.grok_key)
+        self.qwen_key_edit = QtWidgets.QLineEdit(settings.qwen_key)
         self.gdoc_token_edit = QtWidgets.QLineEdit(settings.gdoc_token)
         self.gdoc_folder_edit = QtWidgets.QLineEdit(settings.gdoc_folder_id)
 
@@ -188,7 +206,10 @@ class SettingsDialog(QtWidgets.QDialog):
 
         layout.addRow("Папка оригинала", orig_layout)
         layout.addRow("Папка перевода", trans_layout)
-        layout.addRow("API ключ", self.api_key_edit)
+        layout.addRow("Ключ Gemini", self.gemini_key_edit)
+        layout.addRow("Ключ DeepL", self.deepl_key_edit)
+        layout.addRow("Ключ Grok", self.grok_key_edit)
+        layout.addRow("Ключ Qwen", self.qwen_key_edit)
         layout.addRow("Токен Google Docs", self.gdoc_token_edit)
         layout.addRow("ID папки Google Docs", self.gdoc_folder_edit)
         layout.addRow("Модель", self.model_combo)
@@ -243,7 +264,10 @@ class SettingsDialog(QtWidgets.QDialog):
     def accept(self) -> None:  # type: ignore[override]
         self.settings.original_path = self.original_edit.text()
         self.settings.translation_path = self.translation_edit.text()
-        self.settings.api_key = self.api_key_edit.text()
+        self.settings.gemini_key = self.gemini_key_edit.text()
+        self.settings.deepl_key = self.deepl_key_edit.text()
+        self.settings.grok_key = self.grok_key_edit.text()
+        self.settings.qwen_key = self.qwen_key_edit.text()
         self.settings.gdoc_token = self.gdoc_token_edit.text()
         self.settings.gdoc_folder_id = self.gdoc_folder_edit.text()
         self.settings.model = self.model_combo.currentText()

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict
 import json
 from urllib import error, parse, request
-
-from settings import AppSettings
-
 
 class DeepLTranslator:
     """Simple wrapper around the DeepL HTTP API.
@@ -15,19 +12,17 @@ class DeepLTranslator:
     Parameters
     ----------
     api_key:
-        Optional API key. If not provided, the key is loaded from
-        :class:`settings.AppSettings`.
+        API key for the DeepL service.
     """
 
     #: Endpoint for the free DeepL API tier. The user may need to change this
     #: to ``api.deepl.com`` for a paid subscription.
     BASE_URL = "https://api-free.deepl.com/v2/translate"
 
-    def __init__(self, api_key: Optional[str] = None) -> None:
-        settings = AppSettings.load()
-        self.api_key = api_key or settings.api_key
+    def __init__(self, api_key: str) -> None:
+        self.api_key = api_key
         if not self.api_key:
-            raise ValueError("DeepL API key not found in settings")
+            raise ValueError("DeepL API key not provided")
 
     # ------------------------------------------------------------------
     def translate(
