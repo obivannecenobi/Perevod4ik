@@ -22,6 +22,8 @@ class AppSettings:
         Key for accessing external translation services.
     model:
         Identifier of the LLM or translation model in use.
+    synonym_provider:
+        Source for synonym suggestions ("datamuse" or "model").
     machine_check:
         Whether machine translation verification is enabled.
     auto_next:
@@ -40,6 +42,7 @@ class AppSettings:
     translation_path: str = ""
     api_key: str = ""
     model: str = ""
+    synonym_provider: str = "datamuse"
     machine_check: bool = False
     auto_next: bool = False
     format: str = "docx"
@@ -58,6 +61,7 @@ class AppSettings:
         qs.setValue("translation_path", self.translation_path)
         qs.setValue("api_key", self.api_key)
         qs.setValue("model", self.model)
+        qs.setValue("synonym_provider", self.synonym_provider)
         qs.setValue("machine_check", self.machine_check)
         qs.setValue("auto_next", self.auto_next)
         qs.setValue("format", self.format)
@@ -78,6 +82,7 @@ class AppSettings:
             translation_path=qs.value("translation_path", "", str),
             api_key=qs.value("api_key", "", str),
             model=qs.value("model", "", str),
+            synonym_provider=qs.value("synonym_provider", "datamuse", str),
             machine_check=qs.value("machine_check", False, bool),
             auto_next=qs.value("auto_next", False, bool),
             format=qs.value("format", "docx", str),
@@ -127,6 +132,12 @@ class SettingsDialog(QtWidgets.QDialog):
             if index != -1:
                 self.model_combo.setCurrentIndex(index)
 
+        self.synonym_combo = QtWidgets.QComboBox()
+        self.synonym_combo.addItems(["datamuse", "model"])
+        index = self.synonym_combo.findText(settings.synonym_provider)
+        if index != -1:
+            self.synonym_combo.setCurrentIndex(index)
+
         self.machine_check_box = QtWidgets.QCheckBox()
         self.machine_check_box.setChecked(settings.machine_check)
 
@@ -149,6 +160,7 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Токен Google Docs", self.gdoc_token_edit)
         layout.addRow("ID папки Google Docs", self.gdoc_folder_edit)
         layout.addRow("Модель", self.model_combo)
+        layout.addRow("Провайдер синонимов", self.synonym_combo)
         layout.addRow("Формат", self.format_combo)
         layout.addRow("Машинная проверка", self.machine_check_box)
         layout.addRow("Следующая глава", self.auto_next_box)
@@ -189,6 +201,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.gdoc_token = self.gdoc_token_edit.text()
         self.settings.gdoc_folder_id = self.gdoc_folder_edit.text()
         self.settings.model = self.model_combo.currentText()
+        self.settings.synonym_provider = self.synonym_combo.currentText()
         self.settings.machine_check = self.machine_check_box.isChecked()
         self.settings.auto_next = self.auto_next_box.isChecked()
         self.settings.format = self.format_combo.currentText()

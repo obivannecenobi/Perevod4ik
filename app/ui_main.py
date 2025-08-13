@@ -19,7 +19,8 @@ from services.glossary import (
     export_csv,
 )
 from settings import AppSettings, SettingsDialog
-from services.synonyms import fetch_synonyms
+from services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
+from models import fetch_synonyms_llm
 from .diff_utils import DiffHighlighter
 
 
@@ -307,7 +308,10 @@ class Ui_MainWindow(object):
         word = cursor.selectedText().strip()
         if not word:
             return
-        synonyms = fetch_synonyms(word)
+        if self.settings.synonym_provider == "model":
+            synonyms = fetch_synonyms_llm(word, self.settings.model)
+        else:
+            synonyms = fetch_synonyms_datamuse(word)
         if not synonyms:
             return
         menu = QtWidgets.QMenu(self.translation_edit)
