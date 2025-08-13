@@ -8,6 +8,8 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 import styles
+from services.files import load_stats, save_stats
+from services.glossary import Glossary, list_glossaries
 
 
 @dataclass
@@ -152,8 +154,20 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings = settings
         self._color = QtGui.QColor(settings.highlight_color)
         self._neon_color = QtGui.QColor(settings.neon_color)
+        base = Path(
+            self.settings.translation_path
+            or self.settings.original_path
+            or "."
+        )
+        self._stats_path = base / "stats.json"
+        self._glossary_folder = base / "glossaries"
 
-        layout = QtWidgets.QFormLayout(self)
+        main_layout = QtWidgets.QVBoxLayout(self)
+        tabs = QtWidgets.QTabWidget()
+        main_layout.addWidget(tabs)
+
+        settings_widget = QtWidgets.QWidget()
+        layout = QtWidgets.QFormLayout(settings_widget)
 
         # Original folder selector
         orig_layout = QtWidgets.QHBoxLayout()
@@ -285,15 +299,58 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Предпросмотр свечения", self.neon_preview)
         layout.addRow("Шаблон главы", self.chapter_template_edit)
 
+        tabs.addTab(settings_widget, "Общие")
+
+        stats_widget = QtWidgets.QWidget()
+        stats_layout = QtWidgets.QFormLayout(stats_widget)
+        self.stats_chars = QtWidgets.QLabel("0")
+        self.stats_chapters = QtWidgets.QLabel("0")
+        self.stats_time = QtWidgets.QLabel("00:00:00")
+        self.stats_pairs = QtWidgets.QLabel("0")
+        reset_btn = QtWidgets.QPushButton("Сбросить статистику")
+        reset_btn.clicked.connect(self._reset_stats)
+        stats_layout.addRow("Переведённых символов", self.stats_chars)
+        stats_layout.addRow("Глав", self.stats_chapters)
+        stats_layout.addRow("Общее время", self.stats_time)
+        stats_layout.addRow("Пар слов", self.stats_pairs)
+        stats_layout.addRow(reset_btn)
+        tabs.addTab(stats_widget, "Статистика")
+
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok
             | QtWidgets.QDialogButtonBox.StandardButton.Cancel,
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
-        layout.addRow(buttons)
+        main_layout.addWidget(buttons)
+
+        self._refresh_stats()
 
     # --- internal helpers --------------------------------------------
+    def _refresh_stats(self) -> None:
+        stats = load_stats(self._stats_path)
+        total_chars = sum(entry.get("characters", 0) for entry in stats)
+        total_time = sum(entry.get("time", 0) for entry in stats)
+        chapters = len(stats)
+        hours, remainder = divmod(total_time, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        self.stats_chars.setText(str(total_chars))
+        self.stats_chapters.setText(str(chapters))
+        self.stats_time.setText(f"{hours:02d}:{minutes:02d}:{seconds:02d}")
+        pair_count = 0
+        if self._glossary_folder.exists():
+            for path in list_glossaries(self._glossary_folder):
+                try:
+                    glossary = Glossary.load(path)
+                except Exception:
+                    continue
+                pair_count += len(glossary.entries)
+        self.stats_pairs.setText(str(pair_count))
+
+    def _reset_stats(self) -> None:
+        save_stats([], self._stats_path)
+        self._refresh_stats()
+
     def _on_key_changed(self, name: str) -> None:
         """Reset cached verification when a key edit is modified."""
         label = self._key_labels[name]
