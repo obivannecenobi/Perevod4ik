@@ -7,6 +7,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import styles
 from pathlib import Path
 from services.versioning import VersionManager
+from services.morphology import MorphologyService, MorphologyHighlighter
 from settings import AppSettings, SettingsDialog
 from .diff_utils import DiffHighlighter
 
@@ -93,6 +94,10 @@ class Ui_MainWindow(object):
 
         # Setup diff highlighting for translation edits
         self.diff_highlighter = DiffHighlighter(self.translation_edit.document())
+        self.morphology_service = MorphologyService()
+        self.morphology_highlighter = MorphologyHighlighter(
+            self.translation_edit.document(), self.morphology_service
+        )
         self.original_translation = ""
 
         history_path = Path(self.settings.project_path or ".") / "versions.json"
@@ -103,6 +108,7 @@ class Ui_MainWindow(object):
             self.original_translation = self.version_manager.versions[0]["text"]
             self.diff_highlighter.set_base(self.original_translation)
             self.diff_highlighter.update_diff()
+        self.morphology_highlighter.update_errors()
 
         # Glossary panel
         self.glossary = QtWidgets.QTextEdit(parent=self.centralwidget)
@@ -153,6 +159,9 @@ class Ui_MainWindow(object):
 
         self.original_edit.textChanged.connect(self._update_original_counter)
         self.translation_edit.textChanged.connect(self._update_translation_counter)
+        self.translation_edit.textChanged.connect(
+            self.morphology_highlighter.update_errors
+        )
         self.undo_btn.clicked.connect(self._restore_prev)
         self.redo_btn.clicked.connect(self._restore_next)
 
