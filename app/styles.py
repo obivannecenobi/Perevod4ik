@@ -82,10 +82,10 @@ def init(settings: Any | None = None) -> None:
         ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
+    # Register the Inter font for main text
     if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
         INTER_FONT = family
 
+    # Register the Cattedrale font for headers
     if family := _register_font("Cattedrale[RUSbypenka220]-Regular.ttf"):
         HEADER_FONT = family
-
-
