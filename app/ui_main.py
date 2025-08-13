@@ -5,6 +5,7 @@ from __future__ import annotations
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 import styles
+from . import __version__
 from pathlib import Path
 from services.versioning import VersionManager
 from services.morphology import MorphologyService, MorphologyHighlighter
@@ -22,6 +23,7 @@ from .diff_utils import DiffHighlighter
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, settings: AppSettings | None = None):
+        print(f"Application version: {__version__}")
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
         styles.init()
@@ -162,6 +164,8 @@ class Ui_MainWindow(object):
         # Status/timer area
         self.status_layout = QtWidgets.QHBoxLayout()
         self.status_layout.addStretch()
+        self.version_label = QtWidgets.QLabel(__version__, parent=self.centralwidget)
+        self.status_layout.addWidget(self.version_label)
         self.timer_label = QtWidgets.QLabel("00:00:00", parent=self.centralwidget)
         self.status_layout.addWidget(self.timer_label)
         self.main_layout.addLayout(self.status_layout)
@@ -172,6 +176,8 @@ class Ui_MainWindow(object):
         self.translation_edit.setFont(base_font)
         self.mini_prompt_edit.setFont(base_font)
         self.glossary_table.setFont(base_font)
+        self.timer_label.setFont(base_font)
+        self.version_label.setFont(base_font)
 
         # Style sheet applying colours
         style_sheet = f"""
