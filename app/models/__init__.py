@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Type
 
-from settings import AppSettings
+from ..settings import AppSettings
 
 from .deepl import DeepLTranslator
 from .gemini import GeminiTranslator
