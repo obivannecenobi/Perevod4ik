@@ -8,6 +8,7 @@ import styles
 from pathlib import Path
 from services.versioning import VersionManager
 from settings import AppSettings, SettingsDialog
+from .diff_utils import DiffHighlighter
 
 
 class Ui_MainWindow(object):
@@ -90,11 +91,18 @@ class Ui_MainWindow(object):
         self.translation_layout.addWidget(self.mini_prompt_edit)
         self.right_splitter.addWidget(self.translation_widget)
 
+        # Setup diff highlighting for translation edits
+        self.diff_highlighter = DiffHighlighter(self.translation_edit.document())
+        self.original_translation = ""
+
         history_path = Path(self.settings.project_path or ".") / "versions.json"
         self.version_manager = VersionManager(history_path)
         if self.version_manager.versions:
             last = self.version_manager.versions[self.version_manager.index]["text"]
             self.translation_edit.setPlainText(last)
+            self.original_translation = self.version_manager.versions[0]["text"]
+            self.diff_highlighter.set_base(self.original_translation)
+            self.diff_highlighter.update_diff()
 
         # Glossary panel
         self.glossary = QtWidgets.QTextEdit(parent=self.centralwidget)
@@ -169,7 +177,11 @@ class Ui_MainWindow(object):
         self._start_timer()
         text = self.translation_edit.toPlainText()
         self.translation_counter.setText(str(len(text)))
+        if not self.original_translation:
+            self.original_translation = text
+            self.diff_highlighter.set_base(text)
         self.version_manager.add_version(text)
+        self.diff_highlighter.update_diff()
 
     def _open_settings(self) -> None:
         dialog = SettingsDialog(self.settings, self.centralwidget)
@@ -182,6 +194,7 @@ class Ui_MainWindow(object):
             self.translation_edit.setPlainText(text)
             self.translation_edit.blockSignals(False)
             self.translation_counter.setText(str(len(text)))
+            self.diff_highlighter.update_diff()
 
     def _restore_next(self) -> None:
         text = self.version_manager.redo()
@@ -190,6 +203,7 @@ class Ui_MainWindow(object):
             self.translation_edit.setPlainText(text)
             self.translation_edit.blockSignals(False)
             self.translation_counter.setText(str(len(text)))
+            self.diff_highlighter.update_diff()
 
     # --- translations -----------------------------------------------------
     def retranslateUi(self, MainWindow):
