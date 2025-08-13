@@ -15,6 +15,8 @@ from services.glossary import (
     delete_glossary,
     list_glossaries,
     rename_glossary,
+    import_csv,
+    export_csv,
 )
 from settings import AppSettings, SettingsDialog
 from services.synonyms import fetch_synonyms
@@ -147,10 +149,14 @@ class Ui_MainWindow(object):
         self.add_glossary_btn = QtWidgets.QPushButton("+", parent=self.glossary_widget)
         self.rename_glossary_btn = QtWidgets.QPushButton("Rename", parent=self.glossary_widget)
         self.delete_glossary_btn = QtWidgets.QPushButton("-", parent=self.glossary_widget)
+        self.import_glossary_btn = QtWidgets.QPushButton("Import", parent=self.glossary_widget)
+        self.export_glossary_btn = QtWidgets.QPushButton("Export", parent=self.glossary_widget)
         self.glossary_top.addWidget(self.glossary_combo)
         self.glossary_top.addWidget(self.add_glossary_btn)
         self.glossary_top.addWidget(self.rename_glossary_btn)
         self.glossary_top.addWidget(self.delete_glossary_btn)
+        self.glossary_top.addWidget(self.import_glossary_btn)
+        self.glossary_top.addWidget(self.export_glossary_btn)
         self.auto_prompt_checkbox = QtWidgets.QCheckBox(parent=self.glossary_widget)
         self.glossary_table = QtWidgets.QTableWidget(parent=self.glossary_widget)
         self.glossary_table.setColumnCount(2)
@@ -172,6 +178,8 @@ class Ui_MainWindow(object):
         self.add_glossary_btn.clicked.connect(self._create_glossary)
         self.rename_glossary_btn.clicked.connect(self._rename_glossary)
         self.delete_glossary_btn.clicked.connect(self._delete_glossary)
+        self.import_glossary_btn.clicked.connect(self._import_glossary)
+        self.export_glossary_btn.clicked.connect(self._export_glossary)
         self.add_pair_btn.clicked.connect(self._add_pair)
         self.remove_pair_btn.clicked.connect(self._remove_pair)
         self.glossary_table.itemChanged.connect(self._on_pair_edited)
@@ -443,6 +451,31 @@ class Ui_MainWindow(object):
             self.auto_prompt_checkbox.setChecked(False)
             self.auto_prompt_checkbox.blockSignals(False)
 
+    def _import_glossary(self) -> None:
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self.centralwidget, "Импорт глоссария", "", "CSV/TSV Files (*.csv *.tsv)"
+        )
+        if not path:
+            return
+        glossary = import_csv(path)
+        glossary.save(self._glossary_folder / f"{glossary.name}.json")
+        self.glossary_combo.addItem(glossary.name, glossary.file)
+        self.glossary_combo.setCurrentIndex(self.glossary_combo.count() - 1)
+
+    def _export_glossary(self) -> None:
+        if not self.current_glossary:
+            return
+        default = f"{self.current_glossary.name}.csv"
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self.centralwidget,
+            "Экспорт глоссария",
+            default,
+            "CSV (*.csv);;TSV (*.tsv)",
+        )
+        if not path:
+            return
+        export_csv(self.current_glossary, path)
+
     def _add_pair(self) -> None:
         row = self.glossary_table.rowCount()
         self.glossary_table.insertRow(row)
@@ -498,6 +531,8 @@ class Ui_MainWindow(object):
         self.add_glossary_btn.setText(_translate("MainWindow", "+"))
         self.rename_glossary_btn.setText(_translate("MainWindow", "Переименовать"))
         self.delete_glossary_btn.setText(_translate("MainWindow", "-"))
+        self.import_glossary_btn.setText(_translate("MainWindow", "Импорт"))
+        self.export_glossary_btn.setText(_translate("MainWindow", "Экспорт"))
         self.auto_prompt_checkbox.setText(_translate("MainWindow", "Авто в промпт"))
         self.add_pair_btn.setText(_translate("MainWindow", "Добавить"))
         self.remove_pair_btn.setText(_translate("MainWindow", "Удалить"))
