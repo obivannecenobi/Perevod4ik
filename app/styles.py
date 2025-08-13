@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PyQt6 import QtGui
+from typing import Any
 
 # Color palette (dark theme)
 APP_BACKGROUND = "#212121"
@@ -15,15 +16,18 @@ ACCENT_COLOR = "#00E5FF"
 INTER_FONT = "Inter"
 HEADER_FONT = "Cattedrale"
 
-# QSS rule that highlights widgets when hovered or focused
-FOCUS_HOVER_RULE = f"""
+
+def focus_hover_rule(color: str) -> str:
+    """Return a QSS snippet highlighting widgets on focus/hover."""
+
+    return f"""
 QTextEdit:focus,
 QTextEdit:hover,
 QLineEdit:focus,
 QLineEdit:hover,
 QTableWidget#glossary:focus,
 QTableWidget#glossary:hover {{
-    border: 1px solid {ACCENT_COLOR};
+    border: 1px solid {color};
 }}
 """.strip()
 
@@ -52,14 +56,14 @@ QTableWidget#glossary:hover {{
 """.strip()
 
 
-def init() -> None:
-    """Load bundled fonts and expose their family names.
+def init(settings: Any | None = None) -> None:
+    """Load bundled fonts and apply user-selected colours."""
 
-    The application ships with custom fonts (Inter and Cattedrale).  They are
-    added to the Qt font database when the UI is initialised so that widgets can
-    reference them by family name.  If loading fails, the default family names
-    declared above are kept.
-    """
+    if settings is not None:
+        global APP_BACKGROUND, ACCENT_COLOR, TEXT_COLOR
+        APP_BACKGROUND = getattr(settings, "app_background", APP_BACKGROUND)
+        ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
+        TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
     font_db = QtGui.QFontDatabase()
 
