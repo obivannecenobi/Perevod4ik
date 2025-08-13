@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict
+import csv
 import json
 
 
@@ -113,3 +114,37 @@ def delete_glossary(path: Path | str) -> None:
     file_path = Path(path)
     if file_path.exists():
         file_path.unlink()
+
+
+def import_csv(path: Path | str) -> Glossary:
+    """Load glossary entries from a CSV or TSV file.
+
+    The file is expected to contain two columns: source and target. The first
+    row may optionally be a header. The delimiter is chosen based on the file
+    extension (``.tsv`` uses tab, otherwise comma).
+    """
+
+    file_path = Path(path)
+    delimiter = "\t" if file_path.suffix.lower() == ".tsv" else ","
+    entries: Dict[str, str] = {}
+    with file_path.open("r", encoding="utf-8", newline="") as fh:
+        reader = csv.reader(fh, delimiter=delimiter)
+        for row in reader:
+            if len(row) < 2:
+                continue
+            if row[0].lower() == "source" and row[1].lower() == "target":
+                continue
+            entries[row[0]] = row[1]
+    return Glossary(name=file_path.stem, entries=entries)
+
+
+def export_csv(glossary: Glossary, path: Path | str) -> None:
+    """Write *glossary* entries to *path* in CSV or TSV format."""
+
+    file_path = Path(path)
+    delimiter = "\t" if file_path.suffix.lower() == ".tsv" else ","
+    with file_path.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.writer(fh, delimiter=delimiter)
+        writer.writerow(["source", "target"])
+        for src, dst in glossary.entries.items():
+            writer.writerow([src, dst])
