@@ -231,12 +231,15 @@ class MainController:
 
     def _on_batch_translation_finished(self, src: Path, result: str) -> None:
         self.ui.translation_edit.setPlainText(result)
+        idx = self.chapters.index(src) if src in self.chapters else 0
+        name = self.settings.chapter_template.format(n=idx + 1)
         if self.settings.translation_path:
             out_dir = Path(self.settings.translation_path)
             out_dir.mkdir(parents=True, exist_ok=True)
-            out_path = out_dir / src.name
+            base = out_dir / name
         else:
-            out_path = src.with_name(src.stem + "_translated.docx")
+            base = src.with_name(name)
+        out_path = base.with_suffix(".docx")
         save_docx(result, out_path)
         self._process_queue()
 
@@ -257,28 +260,27 @@ class MainController:
         src = self.chapters[idx]
         ext = ".txt" if self.settings.format == "txt" else ".docx"
         save_func = save_txt if self.settings.format == "txt" else save_docx
+        name = self.settings.chapter_template.format(n=idx + 1)
 
         if isinstance(src, tuple):
-            _, name = src
             if self.settings.translation_path:
                 out_dir = Path(self.settings.translation_path)
                 out_dir.mkdir(parents=True, exist_ok=True)
                 base = out_dir / name
             else:
-                base = Path(f"{name}_translated")
+                base = Path(name)
             out_path = base.with_suffix(ext)
             save_func(text, out_path)
-            stat = {"chapter": name, "characters": len(text), "time": self.ui.elapsed}
         else:
             if self.settings.translation_path:
                 out_dir = Path(self.settings.translation_path)
                 out_dir.mkdir(parents=True, exist_ok=True)
-                base = out_dir / src.stem
+                base = out_dir / name
             else:
-                base = src.with_name(src.stem + "_translated")
+                base = src.with_name(name)
             out_path = base.with_suffix(ext)
             save_func(text, out_path)
-            stat = {"chapter": src.stem, "characters": len(text), "time": self.ui.elapsed}
+        stat = {"chapter": name, "characters": len(text), "time": self.ui.elapsed}
         self.stats = append_stat(stat, self.stats_path)
         self.ui.reset_timer()
         if self.settings.auto_next:
