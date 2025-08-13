@@ -28,6 +28,14 @@ class AppSettings:
         API key for xAI's Grok model.
     qwen_key:
         API key for the Qwen model.
+    gemini_key_valid:
+        Result of the last Gemini key verification.
+    deepl_key_valid:
+        Result of the last DeepL key verification.
+    grok_key_valid:
+        Result of the last Grok key verification.
+    qwen_key_valid:
+        Result of the last Qwen key verification.
     model:
         Identifier of the LLM or translation model in use.
     synonym_provider:
@@ -55,6 +63,10 @@ class AppSettings:
     deepl_key: str = ""
     grok_key: str = ""
     qwen_key: str = ""
+    gemini_key_valid: bool = False
+    deepl_key_valid: bool = False
+    grok_key_valid: bool = False
+    qwen_key_valid: bool = False
     model: str = ""
     synonym_provider: str = "datamuse"
     machine_check: bool = False
@@ -80,6 +92,10 @@ class AppSettings:
         qs.setValue("deepl_key", self.deepl_key)
         qs.setValue("grok_key", self.grok_key)
         qs.setValue("qwen_key", self.qwen_key)
+        qs.setValue("gemini_key_valid", self.gemini_key_valid)
+        qs.setValue("deepl_key_valid", self.deepl_key_valid)
+        qs.setValue("grok_key_valid", self.grok_key_valid)
+        qs.setValue("qwen_key_valid", self.qwen_key_valid)
         qs.setValue("model", self.model)
         qs.setValue("synonym_provider", self.synonym_provider)
         qs.setValue("machine_check", self.machine_check)
@@ -107,6 +123,10 @@ class AppSettings:
             deepl_key=qs.value("deepl_key", "", str),
             grok_key=qs.value("grok_key", "", str),
             qwen_key=qs.value("qwen_key", "", str),
+            gemini_key_valid=qs.value("gemini_key_valid", False, bool),
+            deepl_key_valid=qs.value("deepl_key_valid", False, bool),
+            grok_key_valid=qs.value("grok_key_valid", False, bool),
+            qwen_key_valid=qs.value("qwen_key_valid", False, bool),
             model=qs.value("model", "", str),
             synonym_provider=qs.value("synonym_provider", "datamuse", str),
             machine_check=qs.value("machine_check", False, bool),
@@ -158,6 +178,52 @@ class SettingsDialog(QtWidgets.QDialog):
         self.gdoc_token_edit = QtWidgets.QLineEdit(settings.gdoc_token)
         self.gdoc_folder_edit = QtWidgets.QLineEdit(settings.gdoc_folder_id)
 
+        icon = self.style().standardIcon(
+            QtWidgets.QStyle.StandardPixmap.SP_DialogApplyButton
+        )
+        self._key_edits = {
+            "gemini": self.gemini_key_edit,
+            "deepl": self.deepl_key_edit,
+            "grok": self.grok_key_edit,
+            "qwen": self.qwen_key_edit,
+        }
+        self._key_labels: dict[str, QtWidgets.QLabel] = {}
+        self._verified_key = {
+            "gemini": settings.gemini_key if settings.gemini_key_valid else "",
+            "deepl": settings.deepl_key if settings.deepl_key_valid else "",
+            "grok": settings.grok_key if settings.grok_key_valid else "",
+            "qwen": settings.qwen_key if settings.qwen_key_valid else "",
+        }
+        self._key_valid = {
+            "gemini": settings.gemini_key_valid,
+            "deepl": settings.deepl_key_valid,
+            "grok": settings.grok_key_valid,
+            "qwen": settings.qwen_key_valid,
+        }
+
+        for name, edit in self._key_edits.items():
+            label = QtWidgets.QLabel()
+            label.setPixmap(icon.pixmap(16, 16))
+            if self._key_valid[name]:
+                label.show()
+            else:
+                label.hide()
+            edit.textChanged.connect(
+                lambda text, n=name: self._on_key_changed(n)
+            )
+            edit.editingFinished.connect(lambda n=name: self._verify_key(n))
+            layout_row = QtWidgets.QHBoxLayout()
+            layout_row.addWidget(edit)
+            layout_row.addWidget(label)
+            label_text = {
+                "gemini": "Ключ Gemini",
+                "deepl": "Ключ DeepL",
+                "grok": "Ключ Grok",
+                "qwen": "Ключ Qwen",
+            }[name]
+            layout.addRow(label_text, layout_row)
+            self._key_labels[name] = label
+
         self.model_combo = QtWidgets.QComboBox()
         self.model_combo.addItems(["gemini", "deepl", "grok", "qwen"])
         if settings.model:
@@ -206,10 +272,6 @@ class SettingsDialog(QtWidgets.QDialog):
 
         layout.addRow("Папка оригинала", orig_layout)
         layout.addRow("Папка перевода", trans_layout)
-        layout.addRow("Ключ Gemini", self.gemini_key_edit)
-        layout.addRow("Ключ DeepL", self.deepl_key_edit)
-        layout.addRow("Ключ Grok", self.grok_key_edit)
-        layout.addRow("Ключ Qwen", self.qwen_key_edit)
         layout.addRow("Токен Google Docs", self.gdoc_token_edit)
         layout.addRow("ID папки Google Docs", self.gdoc_folder_edit)
         layout.addRow("Модель", self.model_combo)
@@ -232,6 +294,63 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow(buttons)
 
     # --- internal helpers --------------------------------------------
+    def _on_key_changed(self, name: str) -> None:
+        """Reset cached verification when a key edit is modified."""
+        label = self._key_labels[name]
+        text = self._key_edits[name].text()
+        if text == self._verified_key.get(name, ""):
+            if self._key_valid[name]:
+                label.show()
+            else:
+                label.hide()
+            return
+        label.hide()
+        self._key_valid[name] = False
+        self._verified_key[name] = ""
+
+    def _verify_key(self, name: str) -> None:
+        """Perform a test request to validate an API key."""
+        edit = self._key_edits[name]
+        label = self._key_labels[name]
+        key = edit.text().strip()
+        if key == self._verified_key.get(name, ""):
+            if self._key_valid[name]:
+                label.show()
+            else:
+                label.hide()
+            return
+        if not key:
+            label.hide()
+            self._key_valid[name] = False
+            self._verified_key[name] = ""
+            return
+        try:
+            if name == "gemini":
+                from models.gemini import GeminiTranslator
+
+                GeminiTranslator(key).translate("ping")
+            elif name == "deepl":
+                from models.deepl import DeepLTranslator
+
+                DeepLTranslator(key).translate("ping")
+            elif name == "grok":
+                from models.grok import GrokTranslator
+
+                GrokTranslator(key).translate("ping")
+            elif name == "qwen":
+                from models.qwen import QwenTranslator
+
+                QwenTranslator(key).translate("ping")
+            success = True
+        except Exception:
+            success = False
+        if success:
+            label.show()
+        else:
+            label.hide()
+        self._key_valid[name] = success
+        self._verified_key[name] = key
+
     def _choose_folder(self, line_edit: QtWidgets.QLineEdit) -> None:
         path = QtWidgets.QFileDialog.getExistingDirectory(
             self, "Выбор папки", line_edit.text()
@@ -268,6 +387,22 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.deepl_key = self.deepl_key_edit.text()
         self.settings.grok_key = self.grok_key_edit.text()
         self.settings.qwen_key = self.qwen_key_edit.text()
+        self.settings.gemini_key_valid = (
+            self._key_valid["gemini"]
+            and self._verified_key["gemini"] == self.gemini_key_edit.text().strip()
+        )
+        self.settings.deepl_key_valid = (
+            self._key_valid["deepl"]
+            and self._verified_key["deepl"] == self.deepl_key_edit.text().strip()
+        )
+        self.settings.grok_key_valid = (
+            self._key_valid["grok"]
+            and self._verified_key["grok"] == self.grok_key_edit.text().strip()
+        )
+        self.settings.qwen_key_valid = (
+            self._key_valid["qwen"]
+            and self._verified_key["qwen"] == self.qwen_key_edit.text().strip()
+        )
         self.settings.gdoc_token = self.gdoc_token_edit.text()
         self.settings.gdoc_folder_id = self.gdoc_folder_edit.text()
         self.settings.model = self.model_combo.currentText()
