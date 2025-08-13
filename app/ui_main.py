@@ -23,7 +23,7 @@ from services.glossary import (
 )
 from settings import AppSettings, SettingsDialog
 from services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
-from models import fetch_synonyms_llm
+from models import fetch_synonyms_llm, _MODELS
 from .diff_utils import DiffHighlighter
 
 def resource_path(name: str) -> str:
@@ -66,6 +66,16 @@ class Ui_MainWindow(object):
         self.chapter_combo = QtWidgets.QComboBox(parent=self.centralwidget)
         self.next_btn = QtWidgets.QPushButton(parent=self.centralwidget)
         self.model_combo = QtWidgets.QComboBox(parent=self.centralwidget)
+        models = [
+            name
+            for name in sorted(_MODELS.keys())
+            if getattr(self.settings, f"{name}_key", "")
+        ]
+        self.model_combo.addItems(models)
+        if self.settings.model:
+            idx = self.model_combo.findText(self.settings.model)
+            if idx != -1:
+                self.model_combo.setCurrentIndex(idx)
         self.save_btn = QtWidgets.QPushButton(parent=self.centralwidget)
         self.save_btn.setIcon(QIcon(resource_path("сохранить.png")))
         self.nav_layout.addWidget(self.prev_btn)

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Type
 
+from settings import AppSettings
+
 from .deepl import DeepLTranslator
 from .gemini import GeminiTranslator
 from .grok import GrokTranslator
@@ -21,8 +23,8 @@ _MODELS: Dict[str, TranslatorType] = {
 }
 
 
-def get_translator(name: str):
-    """Return a translator instance for *name*.
+def get_translator(name: str, settings: AppSettings | None = None):
+    """Return a translator instance for *name* using the appropriate key.
 
     The lookup is case-insensitive. ``ValueError`` is raised for unknown
     names.
@@ -31,7 +33,10 @@ def get_translator(name: str):
     cls = _MODELS.get(name.lower())
     if not cls:
         raise ValueError(f"Unknown model: {name}")
-    return cls()
+
+    settings = settings or AppSettings.load()
+    key = getattr(settings, f"{name.lower()}_key", "")
+    return cls(api_key=key)
 
 
 def fetch_synonyms_llm(word: str, model_name: str) -> list[str]:
