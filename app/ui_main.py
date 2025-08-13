@@ -299,7 +299,12 @@ class Ui_MainWindow(object):
         word = cursor.selectedText().strip()
         if not word:
             return
-        synonyms = fetch_synonyms(word)
+        text = self.translation_edit.toPlainText()
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+        left_ctx = text[max(0, start - 40) : start]
+        right_ctx = text[end : end + 40]
+        synonyms = fetch_synonyms(word, left_ctx, right_ctx)
         if not synonyms:
             return
         menu = QtWidgets.QMenu(self.translation_edit)

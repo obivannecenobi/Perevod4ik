@@ -1,26 +1,42 @@
-"""Synonyms lookup service."""
+"""Synonyms lookup service using selected LLM model."""
 
 from __future__ import annotations
 
-import json
-import urllib.error
-import urllib.parse
-import urllib.request
+from typing import Dict, Tuple
+
+from ..models import get_translator
+from ..settings import AppSettings
+
+SYN_PROMPT = (
+    "Дай 5-10 вариантов синонимов одного русского слова в данном контексте.\n"
+    "Формат: слово;слово;слово... Без лишнего текста."
+)
+
+_cache: Dict[Tuple[str, str, str], list[str]] = {}
 
 
-def fetch_synonyms(word: str, lang: str = "en") -> list[str]:
-    """Return a list of synonyms for *word*.
+def fetch_synonyms(word: str, left_ctx: str = "", right_ctx: str = "") -> list[str]:
+    """Return synonyms for *word* using LLM with given context.
 
-    The function uses the public Datamuse API. Network failures are
-    silently ignored and an empty list is returned in such cases.
+    Results are cached by the combination of word and surrounding context
+    to reduce repeated model calls.
     """
 
-    base = "https://api.datamuse.com/words"
-    query = urllib.parse.urlencode({"rel_syn": word, "v": lang})
-    url = f"{base}?{query}"
+    key = (word, left_ctx, right_ctx)
+    if key in _cache:
+        return _cache[key]
+
+    settings = AppSettings.load()
+    model_name = settings.model or "gemini"
+    translator = get_translator(model_name)
+
+    prompt = f"{SYN_PROMPT}\nКонтекст: ...{left_ctx} [ {word} ] {right_ctx}..."
     try:
-        with urllib.request.urlopen(url, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+        response = translator.translate("", prompt)
     except Exception:
         return []
-    return [item["word"] for item in data if "word" in item]
+
+    parts = [p.strip() for p in response.replace("\n", ";").split(";") if p.strip()]
+    synonyms = parts[:10]
+    _cache[key] = synonyms
+    return synonyms
