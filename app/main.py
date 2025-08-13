@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from queue import Queue
-from typing import Dict, Tuple
+from typing import Tuple
 
 from PyQt6 import QtGui, QtWidgets
 
