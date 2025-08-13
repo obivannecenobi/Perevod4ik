@@ -218,8 +218,31 @@ class Ui_MainWindow(object):
         self.glossary_table.setFont(base_font)
         self.timer_label.setFont(base_font)
         self.version_label.setFont(base_font)
+        self._apply_style()
 
-        # Style sheet applying colours
+        # Timer and character counters
+        self.elapsed = 0
+        self.timer = QtCore.QTimer(MainWindow)
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self._update_timer)
+
+        self.original_edit.textChanged.connect(self._update_original_counter)
+        self.translation_edit.textChanged.connect(self._update_translation_counter)
+        self.translation_edit.cursorPositionChanged.connect(
+            self._on_cursor_position_changed
+        )
+        self.undo_btn.clicked.connect(self._restore_prev)
+        self.redo_btn.clicked.connect(self._restore_next)
+
+        self._load_glossaries()
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def _apply_style(self) -> None:
+        glow_rule = styles.neon_glow_rule(
+            self.settings.neon_color, self.settings.neon_intensity
+        )
         style_sheet = f"""
         QWidget {{
             background-color: {styles.APP_BACKGROUND};
@@ -240,28 +263,9 @@ class Ui_MainWindow(object):
             color: rgba(255, 255, 255, 128);
             font-size: 10px;
         }}
-        {styles.FOCUS_HOVER_RULE}
+        {glow_rule}
         """
         self.centralwidget.setStyleSheet(style_sheet)
-
-        # Timer and character counters
-        self.elapsed = 0
-        self.timer = QtCore.QTimer(MainWindow)
-        self.timer.setInterval(1000)
-        self.timer.timeout.connect(self._update_timer)
-
-        self.original_edit.textChanged.connect(self._update_original_counter)
-        self.translation_edit.textChanged.connect(self._update_translation_counter)
-        self.translation_edit.cursorPositionChanged.connect(
-            self._on_cursor_position_changed
-        )
-        self.undo_btn.clicked.connect(self._restore_prev)
-        self.redo_btn.clicked.connect(self._restore_next)
-
-        self._load_glossaries()
-
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     # --- internal helpers -------------------------------------------------
     def _update_timer(self) -> None:
@@ -374,6 +378,7 @@ class Ui_MainWindow(object):
             elif not self.settings.machine_check and previous:
                 self._disable_machine_check()
             self.diff_highlighter.set_color(self.settings.highlight_color)
+            self._apply_style()
 
     def _restore_prev(self) -> None:
         text = self.version_manager.undo()

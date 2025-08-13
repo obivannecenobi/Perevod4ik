@@ -28,6 +28,30 @@ QTableWidget#glossary:hover {{
 """.strip()
 
 
+def neon_glow_rule(color: str, intensity: int) -> str:
+    """Return a QSS snippet that adds an outer "neon" glow.
+
+    Parameters
+    ----------
+    color:
+        Hex representation of the glow colour.
+    intensity:
+        Blur radius of the glow in pixels.
+    """
+
+    return f"""
+QTextEdit:focus,
+QTextEdit:hover,
+QLineEdit:focus,
+QLineEdit:hover,
+QTableWidget#glossary:focus,
+QTableWidget#glossary:hover {{
+    border: 1px solid {color};
+    box-shadow: 0 0 {intensity}px {color};
+}}
+""".strip()
+
+
 def init() -> None:
     """Load bundled fonts and expose their family names.
 
