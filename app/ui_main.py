@@ -190,17 +190,21 @@ class Ui_MainWindow(object):
             color: {styles.TEXT_COLOR};
             font-family: {styles.INTER_FONT};
         }}
-        QTextEdit {{
+        QTextEdit,
+        QLineEdit {{
             background-color: {styles.FIELD_BACKGROUND};
             color: {styles.TEXT_COLOR};
+            border: 1px solid transparent;
         }}
         QTableWidget#glossary {{
             background-color: {styles.GLOSSARY_BACKGROUND};
+            border: 1px solid transparent;
         }}
         QLabel#counter {{
             color: rgba(255, 255, 255, 128);
             font-size: 10px;
         }}
+        {styles.FOCUS_HOVER_RULE}
         """
         self.centralwidget.setStyleSheet(style_sheet)
 
