@@ -33,6 +33,8 @@ class Ui_MainWindow(object):
 
         self.settings = settings or AppSettings.load()
         self.current_glossary: Glossary | None = None
+        self._current_word: str = ""
+        self._current_context: str = ""
 
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -237,6 +239,9 @@ class Ui_MainWindow(object):
 
         self.original_edit.textChanged.connect(self._update_original_counter)
         self.translation_edit.textChanged.connect(self._update_translation_counter)
+        self.translation_edit.cursorPositionChanged.connect(
+            self._on_cursor_position_changed
+        )
         self.undo_btn.clicked.connect(self._restore_prev)
         self.redo_btn.clicked.connect(self._restore_next)
 
@@ -276,6 +281,21 @@ class Ui_MainWindow(object):
             self.diff_highlighter.set_base(text)
         self.version_manager.add_version(text)
         self.diff_highlighter.update_diff()
+
+    def _on_cursor_position_changed(self) -> None:
+        cursor = self.translation_edit.textCursor()
+        if not cursor.hasSelection():
+            cursor.select(QtGui.QTextCursor.SelectionType.WordUnderCursor)
+        word = cursor.selectedText().strip()
+        if not word:
+            return
+        text = self.translation_edit.toPlainText()
+        start = max(cursor.selectionStart() - 30, 0)
+        end = min(cursor.selectionEnd() + 30, len(text))
+        self._current_word = word
+        self._current_context = text[start:end]
+        rect = self.translation_edit.cursorRect(cursor)
+        self._show_synonym_menu(rect.bottomRight())
 
     def _enable_machine_check(self) -> None:
         if self.morphology_highlighter is None:

@@ -53,3 +53,15 @@
          synonyms = model.get_synonyms(word, left_context, right_context)
          # Выводим синонимы пользователю для выбора
      ```
+
+### 6. Обработчик **cursorPositionChanged**
+   - При изменении позиции курсора в поле «Перевод» определяет текущие слово и контекст.
+   - Автоматически вызывает существующую функцию `_show_synonym_menu`, что приводит к отображению списка синонимов без вызова контекстного меню.
+   - Пример:
+     ```python
+     def _on_cursor_position_changed(self):
+         cursor = self.translation_edit.textCursor()
+         cursor.select(QTextCursor.WordUnderCursor)
+         word = cursor.selectedText()
+         self._show_synonym_menu(self.translation_edit.cursorRect(cursor).bottomRight())
+     ```
