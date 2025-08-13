@@ -8,11 +8,11 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QIcon
 
-import styles
+from . import styles
 from . import __version__
-from services.versioning import VersionManager
-from services.morphology import MorphologyService, MorphologyHighlighter
-from services.glossary import (
+from .services.versioning import VersionManager
+from .services.morphology import MorphologyService, MorphologyHighlighter
+from .services.glossary import (
     Glossary,
     create_glossary,
     delete_glossary,
@@ -21,9 +21,9 @@ from services.glossary import (
     import_csv,
     export_csv,
 )
-from settings import AppSettings, SettingsDialog
-from services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
-from models import fetch_synonyms_llm, _MODELS
+from .settings import AppSettings, SettingsDialog
+from .services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
+from .models import fetch_synonyms_llm, _MODELS
 from .diff_utils import DiffHighlighter
 
 def resource_path(name: str) -> str:

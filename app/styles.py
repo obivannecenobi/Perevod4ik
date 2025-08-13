@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PyQt6 import QtGui
+from pathlib import Path
 from typing import Any
 
 # Color palette (dark theme)
@@ -15,6 +16,9 @@ ACCENT_COLOR = "#00E5FF"
 # Font family names are populated at runtime in :func:`init`.
 INTER_FONT = "Inter"
 HEADER_FONT = "Cattedrale"
+
+# Directory containing bundled font files
+FONT_DIR = Path(__file__).resolve().parent / "fonts"
 
 
 def focus_hover_rule(color: str) -> str:
@@ -65,18 +69,20 @@ def init(settings: Any | None = None) -> None:
         ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
-    font_db = QtGui.QFontDatabase()
-
-    inter_id = font_db.addApplicationFont("Inter-VariableFont_opsz,wght.ttf")
+    inter_id = QtGui.QFontDatabase.addApplicationFont(
+        str(FONT_DIR / "Inter-VariableFont_opsz,wght.ttf")
+    )
     if inter_id != -1:
-        families = font_db.applicationFontFamilies(inter_id)
+        families = QtGui.QFontDatabase.applicationFontFamilies(inter_id)
         if families:
             global INTER_FONT
             INTER_FONT = families[0]
 
-    catt_id = font_db.addApplicationFont("Cattedrale[RUSbypenka220]-Regular.ttf")
+    catt_id = QtGui.QFontDatabase.addApplicationFont(
+        str(FONT_DIR / "Cattedrale[RUSbypenka220]-Regular.ttf")
+    )
     if catt_id != -1:
-        families = font_db.applicationFontFamilies(catt_id)
+        families = QtGui.QFontDatabase.applicationFontFamilies(catt_id)
         if families:
             global HEADER_FONT
             HEADER_FONT = families[0]
