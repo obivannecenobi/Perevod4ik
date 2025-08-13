@@ -10,6 +10,7 @@ from PyQt6 import QtGui, QtWidgets
 
 from models import get_translator
 from services.files import iter_docx_files, load_docx, save_docx
+from services.versioning import check_for_updates
 from services.workers import ModelWorker
 from ui_main import Ui_MainWindow
 from settings import AppSettings
@@ -137,6 +138,9 @@ class MainController:
 
 def main() -> None:
     app = QtWidgets.QApplication(sys.argv)
+    repo_root = Path(__file__).resolve().parent.parent
+    if check_for_updates(repo_root):
+        QtWidgets.QMessageBox.information(None, "Обновление", "Доступны обновления приложения.")
     window = QtWidgets.QMainWindow()
     settings = AppSettings.load()
     ui = Ui_MainWindow()

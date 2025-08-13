@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Iterable
 import xml.etree.ElementTree as ET
 import zipfile
+import json
+from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # Directory traversal
@@ -80,3 +82,40 @@ def _build_document_xml(text: str) -> str:
         t.text = paragraph
     ET.SubElement(body, f"{{{ns}}}sectPr")
     return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Translation revision handling
+
+def load_versions(path: Path | str) -> list[dict]:
+    """Load translation versions from *path*.
+
+    Returns an empty list if the file does not exist.
+    """
+
+    file_path = Path(path)
+    if not file_path.exists():
+        return []
+    with file_path.open("r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def save_versions(versions: list[dict], path: Path | str) -> None:
+    """Persist *versions* to *path* as JSON."""
+
+    file_path = Path(path)
+    with file_path.open("w", encoding="utf-8") as fh:
+        json.dump(versions, fh, ensure_ascii=False, indent=2)
+
+
+def append_version(text: str, path: Path | str) -> list[dict]:
+    """Append a new version entry with timestamp to *path*.
+
+    The function loads existing versions, appends a record and writes the
+    updated list back to disk. The updated list is returned.
+    """
+
+    versions = load_versions(path)
+    versions.append({"timestamp": datetime.utcnow().isoformat(), "text": text})
+    save_versions(versions, path)
+    return versions

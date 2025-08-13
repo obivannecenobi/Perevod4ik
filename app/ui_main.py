@@ -5,6 +5,8 @@ from __future__ import annotations
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 import styles
+from pathlib import Path
+from services.versioning import VersionManager
 from settings import AppSettings, SettingsDialog
 
 
@@ -73,14 +75,26 @@ class Ui_MainWindow(object):
         self.translation_counter = QtWidgets.QLabel("0", parent=self.translation_widget)
         self.translation_counter.setObjectName("counter")
         self.translation_counter.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+        self.version_layout = QtWidgets.QHBoxLayout()
+        self.undo_btn = QtWidgets.QPushButton(parent=self.translation_widget)
+        self.redo_btn = QtWidgets.QPushButton(parent=self.translation_widget)
+        self.version_layout.addWidget(self.undo_btn)
+        self.version_layout.addWidget(self.redo_btn)
         self.mini_prompt_label = QtWidgets.QLabel(parent=self.translation_widget)
         self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.translation_widget)
         self.translation_layout.addWidget(self.translation_label)
         self.translation_layout.addWidget(self.translation_edit)
         self.translation_layout.addWidget(self.translation_counter)
+        self.translation_layout.addLayout(self.version_layout)
         self.translation_layout.addWidget(self.mini_prompt_label)
         self.translation_layout.addWidget(self.mini_prompt_edit)
         self.right_splitter.addWidget(self.translation_widget)
+
+        history_path = Path(self.settings.project_path or ".") / "versions.json"
+        self.version_manager = VersionManager(history_path)
+        if self.version_manager.versions:
+            last = self.version_manager.versions[self.version_manager.index]["text"]
+            self.translation_edit.setPlainText(last)
 
         # Glossary panel
         self.glossary = QtWidgets.QTextEdit(parent=self.centralwidget)
@@ -131,6 +145,8 @@ class Ui_MainWindow(object):
 
         self.original_edit.textChanged.connect(self._update_original_counter)
         self.translation_edit.textChanged.connect(self._update_translation_counter)
+        self.undo_btn.clicked.connect(self._restore_prev)
+        self.redo_btn.clicked.connect(self._restore_next)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -151,11 +167,29 @@ class Ui_MainWindow(object):
 
     def _update_translation_counter(self) -> None:
         self._start_timer()
-        self.translation_counter.setText(str(len(self.translation_edit.toPlainText())))
+        text = self.translation_edit.toPlainText()
+        self.translation_counter.setText(str(len(text)))
+        self.version_manager.add_version(text)
 
     def _open_settings(self) -> None:
         dialog = SettingsDialog(self.settings, self.centralwidget)
         dialog.exec()
+
+    def _restore_prev(self) -> None:
+        text = self.version_manager.undo()
+        if text is not None:
+            self.translation_edit.blockSignals(True)
+            self.translation_edit.setPlainText(text)
+            self.translation_edit.blockSignals(False)
+            self.translation_counter.setText(str(len(text)))
+
+    def _restore_next(self) -> None:
+        text = self.version_manager.redo()
+        if text is not None:
+            self.translation_edit.blockSignals(True)
+            self.translation_edit.setPlainText(text)
+            self.translation_edit.blockSignals(False)
+            self.translation_counter.setText(str(len(text)))
 
     # --- translations -----------------------------------------------------
     def retranslateUi(self, MainWindow):
@@ -165,6 +199,8 @@ class Ui_MainWindow(object):
         self.next_btn.setText(_translate("MainWindow", "⦊"))
         self.original_label.setText(_translate("MainWindow", "Оригинал"))
         self.translation_label.setText(_translate("MainWindow", "Перевод"))
+        self.undo_btn.setText(_translate("MainWindow", "Назад"))
+        self.redo_btn.setText(_translate("MainWindow", "Вперёд"))
         self.mini_prompt_label.setText(_translate("MainWindow", "Мини-промпт"))
         self.settings_menu.setTitle(_translate("MainWindow", "Настройки"))
         self.settings_action.setText(_translate("MainWindow", "Параметры…"))
