@@ -134,3 +134,40 @@ def append_version(text: str, path: Path | str) -> list[dict]:
     versions.append({"timestamp": datetime.utcnow().isoformat(), "text": text})
     save_versions(versions, path)
     return versions
+
+
+# ---------------------------------------------------------------------------
+# Statistics handling
+
+def load_stats(path: Path | str) -> list[dict]:
+    """Load translation statistics from *path*.
+
+    Returns an empty list if the file does not exist.
+    """
+
+    file_path = Path(path)
+    if not file_path.exists():
+        return []
+    with file_path.open("r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def save_stats(stats: list[dict], path: Path | str) -> None:
+    """Persist statistics *stats* to *path* as JSON."""
+
+    file_path = Path(path)
+    with file_path.open("w", encoding="utf-8") as fh:
+        json.dump(stats, fh, ensure_ascii=False, indent=2)
+
+
+def append_stat(stat: dict, path: Path | str) -> list[dict]:
+    """Append a new statistics entry to *path*.
+
+    The function loads existing stats, appends *stat* and writes the
+    updated list back to disk. The updated list is returned.
+    """
+
+    stats = load_stats(path)
+    stats.append(stat)
+    save_stats(stats, path)
+    return stats

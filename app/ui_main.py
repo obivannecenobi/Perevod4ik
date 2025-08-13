@@ -178,6 +178,13 @@ class Ui_MainWindow(object):
         if not self.timer.isActive():
             self.timer.start()
 
+    def reset_timer(self) -> None:
+        """Reset the editing timer."""
+
+        self.timer.stop()
+        self.elapsed = 0
+        self.timer_label.setText("00:00")
+
     def _update_original_counter(self) -> None:
         self._start_timer()
         self.original_counter.setText(str(len(self.original_edit.toPlainText())))
