@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Iterable
+from queue import Queue
 import xml.etree.ElementTree as ET
 import zipfile
 import json
@@ -24,6 +25,20 @@ def iter_docx_files(folder: Path | str) -> Iterable[Path]:
 
     root = Path(folder)
     yield from root.rglob("*.docx")
+
+
+def enqueue_chapters(folder: Path | str, queue: Queue[Path]) -> list[Path]:
+    """Scan *folder* for chapters and enqueue them into *queue*.
+
+    Returns the list of discovered chapter paths. The function simply
+    traverses the folder using :func:`iter_docx_files` and puts each file
+    into the provided queue for later processing by workers.
+    """
+
+    files = sorted(iter_docx_files(folder))
+    for file in files:
+        queue.put(file)
+    return files
 
 
 # ---------------------------------------------------------------------------
