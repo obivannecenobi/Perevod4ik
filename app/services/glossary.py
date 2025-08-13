@@ -68,3 +68,39 @@ def list_glossaries(folder: Path | str) -> list[Path]:
 
     root = Path(folder)
     return sorted(root.glob("*.json"))
+
+
+def create_glossary(name: str, folder: Path | str) -> Glossary:
+    """Create a new empty glossary with *name* in *folder*.
+
+    The new glossary is written to ``<folder>/<name>.json`` and the
+    corresponding :class:`Glossary` instance is returned.
+    """
+
+    root = Path(folder)
+    root.mkdir(parents=True, exist_ok=True)
+    glossary = Glossary(name=name)
+    path = root / f"{name}.json"
+    glossary.save(path)
+    return glossary
+
+
+def rename_glossary(path: Path | str, new_name: str) -> Path:
+    """Rename the glossary file at *path* to *new_name*.
+
+    Returns the new :class:`Path` of the renamed file.
+    """
+
+    file_path = Path(path)
+    new_path = file_path.with_name(f"{new_name}.json")
+    if file_path.exists():
+        file_path.rename(new_path)
+    return new_path
+
+
+def delete_glossary(path: Path | str) -> None:
+    """Remove the glossary file at *path* if it exists."""
+
+    file_path = Path(path)
+    if file_path.exists():
+        file_path.unlink()
