@@ -10,7 +10,15 @@ from typing import Dict
 from PyQt6 import QtGui, QtWidgets
 
 from models import get_translator
-from services.files import enqueue_chapters, iter_docx_files, load_docx, save_docx
+from services.files import (
+    append_stat,
+    enqueue_chapters,
+    iter_docx_files,
+    load_docx,
+    load_stats,
+    save_docx,
+)
+from services.reports import save_csv, save_html
 from services.versioning import check_for_updates
 from services.workers import DEFAULT_RATE_LIMITER, ModelWorker
 from ui_main import Ui_MainWindow
@@ -27,6 +35,8 @@ class MainController:
         self.chapters: list[Path] = []
         self.worker: ModelWorker | None = None
         self.batch_queue: Queue[Path] | None = None
+        self.stats_path = Path(self.settings.project_path or ".") / "stats.json"
+        self.stats = load_stats(self.stats_path)
 
         self._init_ui()
         self._load_chapter_list()
@@ -60,6 +70,11 @@ class MainController:
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+2"), self.window, activated=lambda: self.ui.translation_edit.setFocus())
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+3"), self.window, activated=lambda: self.ui.mini_prompt_edit.setFocus())
 
+        # report export button
+        self.export_btn = QtWidgets.QPushButton("Экспорт отчёта", parent=self.ui.centralwidget)
+        self.ui.status_layout.insertWidget(0, self.export_btn)
+        self.export_btn.clicked.connect(self.export_report)
+
     # ------------------------------------------------------------------
     # Chapter handling
     def _load_chapter_list(self) -> None:
@@ -80,6 +95,7 @@ class MainController:
         text = load_docx(self.chapters[index])
         self.ui.original_edit.setPlainText(text)
         self.ui.translation_edit.clear()
+        self.ui.reset_timer()
 
     def prev_chapter(self) -> None:
         idx = self.ui.chapter_combo.currentIndex()
@@ -199,6 +215,29 @@ class MainController:
         src = self.chapters[idx]
         out_path = src.with_name(src.stem + "_translated.docx")
         save_docx(text, out_path)
+        stat = {"chapter": src.stem, "characters": len(text), "time": self.ui.elapsed}
+        self.stats = append_stat(stat, self.stats_path)
+        self.ui.reset_timer()
+
+    # ------------------------------------------------------------------
+    def export_report(self) -> None:
+        if not self.stats:
+            QtWidgets.QMessageBox.information(self.window, "Отчёт", "Нет данных для отчёта.")
+            return
+        default_dir = Path(self.settings.project_path or ".")
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self.window,
+            "Сохранить отчёт",
+            str(default_dir / "report.csv"),
+            "CSV (*.csv);;HTML (*.html)",
+        )
+        if not path:
+            return
+        target = Path(path)
+        if target.suffix.lower() == ".csv":
+            save_csv(self.stats, target)
+        else:
+            save_html(self.stats, target)
 
 
 def main() -> None:
