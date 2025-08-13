@@ -7,6 +7,8 @@ from pathlib import Path
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
+import styles
+
 
 @dataclass
 class AppSettings:
@@ -52,6 +54,8 @@ class AppSettings:
     gdoc_token: str = ""
     gdoc_folder_id: str = ""
     highlight_color: str = "#80ffff00"  # semi-transparent yellow
+    neon_color: str = styles.ACCENT_COLOR
+    neon_intensity: int = 20
     chapter_template: str = "глава {n}"
     _file: Path = field(default=Path("settings.ini"), repr=False)
 
@@ -72,6 +76,8 @@ class AppSettings:
         qs.setValue("gdoc_token", self.gdoc_token)
         qs.setValue("gdoc_folder_id", self.gdoc_folder_id)
         qs.setValue("highlight_color", self.highlight_color)
+        qs.setValue("neon_color", self.neon_color)
+        qs.setValue("neon_intensity", self.neon_intensity)
         qs.setValue("chapter_template", self.chapter_template)
         qs.sync()
         self._file = file_path
@@ -94,6 +100,8 @@ class AppSettings:
             gdoc_token=qs.value("gdoc_token", "", str),
             gdoc_folder_id=qs.value("gdoc_folder_id", "", str),
             highlight_color=qs.value("highlight_color", "#80ffff00", str),
+            neon_color=qs.value("neon_color", styles.ACCENT_COLOR, str),
+            neon_intensity=qs.value("neon_intensity", 20, int),
             chapter_template=qs.value("chapter_template", "глава {n}", str),
         )
         obj._file = file_path
@@ -108,6 +116,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.setWindowTitle("Настройки")
         self.settings = settings
         self._color = QtGui.QColor(settings.highlight_color)
+        self._neon_color = QtGui.QColor(settings.neon_color)
 
         layout = QtWidgets.QFormLayout(self)
 
@@ -161,6 +170,21 @@ class SettingsDialog(QtWidgets.QDialog):
         self.color_btn = QtWidgets.QPushButton()
         self._update_color_btn()
         self.color_btn.clicked.connect(self._choose_color)
+        self.neon_color_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.neon_color_slider.setRange(0, 359)
+        hue = self._neon_color.hue()
+        self.neon_color_slider.setValue(0 if hue == -1 else hue)
+
+        self.neon_intensity_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.neon_intensity_slider.setRange(1, 50)
+        self.neon_intensity_slider.setValue(settings.neon_intensity)
+
+        self.neon_preview = QtWidgets.QFrame()
+        self.neon_preview.setFixedSize(40, 20)
+        self.neon_preview.setFrameShape(QtWidgets.QFrame.Shape.Box)
+        self.neon_color_slider.valueChanged.connect(self._update_neon_preview)
+        self.neon_intensity_slider.valueChanged.connect(self._update_neon_preview)
+        self._update_neon_preview()
 
         layout.addRow("Папка оригинала", orig_layout)
         layout.addRow("Папка перевода", trans_layout)
@@ -173,6 +197,9 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Машинная проверка", self.machine_check_box)
         layout.addRow("Следующая глава", self.auto_next_box)
         layout.addRow("Цвет подсветки", self.color_btn)
+        layout.addRow("Цвет свечения", self.neon_color_slider)
+        layout.addRow("Интенсивность свечения", self.neon_intensity_slider)
+        layout.addRow("Предпросмотр свечения", self.neon_preview)
         layout.addRow("Шаблон главы", self.chapter_template_edit)
 
         buttons = QtWidgets.QDialogButtonBox(
@@ -197,6 +224,16 @@ class SettingsDialog(QtWidgets.QDialog):
             self._color = color
             self._update_color_btn()
 
+    def _update_neon_preview(self) -> None:
+        color = QtGui.QColor.fromHsv(
+            self.neon_color_slider.value(),
+            255,
+            min(255, self.neon_intensity_slider.value() * 5),
+        )
+        self.neon_preview.setStyleSheet(
+            f"background-color: {color.name()}"
+        )
+
     def _update_color_btn(self) -> None:
         self.color_btn.setStyleSheet(
             f"background-color: {self._color.name(QtGui.QColor.NameFormat.HexArgb)}"
@@ -217,6 +254,13 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.highlight_color = self._color.name(
             QtGui.QColor.NameFormat.HexArgb
         )
+        neon = QtGui.QColor.fromHsv(
+            self.neon_color_slider.value(),
+            255,
+            min(255, self.neon_intensity_slider.value() * 5),
+        )
+        self.settings.neon_color = neon.name()
+        self.settings.neon_intensity = self.neon_intensity_slider.value()
         self.settings.chapter_template = self.chapter_template_edit.text()
         self.settings.save()
         super().accept()
