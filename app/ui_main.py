@@ -25,6 +25,7 @@ from settings import AppSettings, SettingsDialog
 from services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
 from models import fetch_synonyms_llm, _MODELS
 from .diff_utils import DiffHighlighter
+from .project_manager import load_projects, add_project
 
 def resource_path(name: str) -> str:
     """Return absolute path to resource, compatible with PyInstaller."""
@@ -59,6 +60,35 @@ class Ui_MainWindow(object):
         self.settings_action.setIcon(QIcon(resource_path("настройки.png")))
         self.settings_menu.addAction(self.settings_action)
         self.settings_action.triggered.connect(self._open_settings)
+
+        # Projects dock
+        self.project_dock = QtWidgets.QDockWidget("Проекты", MainWindow)
+        self.project_widget = QtWidgets.QWidget(parent=self.project_dock)
+        self.project_layout = QtWidgets.QVBoxLayout(self.project_widget)
+        self.project_btn_layout = QtWidgets.QHBoxLayout()
+        self.add_project_btn = QtWidgets.QPushButton("+", parent=self.project_widget)
+        self.project_btn_layout.addWidget(self.add_project_btn)
+        self.project_btn_layout.addStretch()
+        self.project_layout.addLayout(self.project_btn_layout)
+        self.active_tree = QtWidgets.QTreeWidget(parent=self.project_widget)
+        self.active_tree.setHeaderLabel("Активные проекты")
+        self.archive_tree = QtWidgets.QTreeWidget(parent=self.project_widget)
+        self.archive_tree.setHeaderLabel("Архив")
+        self.project_layout.addWidget(self.active_tree)
+        self.project_layout.addWidget(self.archive_tree)
+        self.project_widget.setLayout(self.project_layout)
+        self.project_dock.setWidget(self.project_widget)
+        MainWindow.addDockWidget(
+            QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.project_dock
+        )
+        self.menu_bar.addAction(self.project_dock.toggleViewAction())
+        tree_style = (
+            f"QTreeWidget::item:selected{{background:{self.settings.neon_color};}}"
+        )
+        self.active_tree.setStyleSheet(tree_style)
+        self.archive_tree.setStyleSheet(tree_style)
+        self.add_project_btn.clicked.connect(self._create_project)
+        self._load_projects()
 
         # Navigation bar
         self.nav_layout = QtWidgets.QHBoxLayout()
@@ -409,6 +439,38 @@ class Ui_MainWindow(object):
             self.translation_edit.blockSignals(False)
             self.translation_counter.setText(str(len(text)))
             self.diff_highlighter.update_diff()
+
+    # --- project management ---------------------------------------------
+    def _load_projects(self) -> None:
+        data = load_projects()
+        self.active_tree.blockSignals(True)
+        self.archive_tree.blockSignals(True)
+        self.active_tree.clear()
+        self.archive_tree.clear()
+        for pr in data.get("active", []):
+            item = QtWidgets.QTreeWidgetItem([pr["name"]])
+            item.setData(0, QtCore.Qt.ItemDataRole.UserRole, pr["path"])
+            self.active_tree.addTopLevelItem(item)
+        for pr in data.get("archived", []):
+            item = QtWidgets.QTreeWidgetItem([pr["name"]])
+            item.setData(0, QtCore.Qt.ItemDataRole.UserRole, pr["path"])
+            self.archive_tree.addTopLevelItem(item)
+        self.active_tree.blockSignals(False)
+        self.archive_tree.blockSignals(False)
+
+    def _create_project(self) -> None:
+        name, ok = QtWidgets.QInputDialog.getText(
+            self.centralwidget, "Новый проект", "Название:"
+        )
+        if not ok or not name:
+            return
+        path = QtWidgets.QFileDialog.getExistingDirectory(
+            self.centralwidget, "Выберите каталог проекта"
+        )
+        if not path:
+            return
+        add_project(name, path)
+        self._load_projects()
 
     # --- glossary management ---------------------------------------------
     def _load_glossaries(self) -> None:
