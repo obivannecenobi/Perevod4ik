@@ -75,36 +75,17 @@ def _register_font(filename: str) -> str | None:
 def init(settings: Any | None = None) -> None:
     """Load bundled fonts and apply user-selected colours."""
 
+    global APP_BACKGROUND, ACCENT_COLOR, TEXT_COLOR, INTER_FONT, HEADER_FONT
+
     if settings is not None:
-        global APP_BACKGROUND, ACCENT_COLOR, TEXT_COLOR
         APP_BACKGROUND = getattr(settings, "app_background", APP_BACKGROUND)
         ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
-if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
-    global INTER_FONT
-    INTER_FONT = family
+    # Register the Inter font for main text
+    if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
+        INTER_FONT = family
 
-if family := _register_font("Cattedrale[RUSbypenka220]-Regular.ttf"):
-    global HEADER_FONT
-    HEADER_FONT = family
-
-inter_id = QtGui.QFontDatabase.addApplicationFont(
-    str(FONT_DIR / "Inter-VariableFont_opsz,wght.ttf")
-)
-if inter_id != -1:
-    families = QtGui.QFontDatabase.applicationFontFamilies(inter_id)
-    if families:
-        global INTER_FONT
-        INTER_FONT = families[0]
-
-catt_id = QtGui.QFontDatabase.addApplicationFont(
-    str(FONT_DIR / "Cattedrale[RUSbypenka220]-Regular.ttf")
-)
-if catt_id != -1:
-    families = QtGui.QFontDatabase.applicationFontFamilies(catt_id)
-    if families:
-        global HEADER_FONT
-        HEADER_FONT = families[0]
-
-
+    # Register the Cattedrale font for headers
+    if family := _register_font("Cattedrale[RUSbypenka220]-Regular.ttf"):
+        HEADER_FONT = family
