@@ -26,6 +26,8 @@ class AppSettings:
         Whether machine translation verification is enabled.
     auto_next:
         Move to the next chapter automatically after saving.
+    format:
+        Output format for saved translations ("docx" or "txt").
     gdoc_token:
         OAuth token for accessing Google Docs.
     gdoc_folder_id:
@@ -40,6 +42,7 @@ class AppSettings:
     model: str = ""
     machine_check: bool = False
     auto_next: bool = False
+    format: str = "docx"
     gdoc_token: str = ""
     gdoc_folder_id: str = ""
     highlight_color: str = "#80ffff00"  # semi-transparent yellow
@@ -57,6 +60,7 @@ class AppSettings:
         qs.setValue("model", self.model)
         qs.setValue("machine_check", self.machine_check)
         qs.setValue("auto_next", self.auto_next)
+        qs.setValue("format", self.format)
         qs.setValue("gdoc_token", self.gdoc_token)
         qs.setValue("gdoc_folder_id", self.gdoc_folder_id)
         qs.setValue("highlight_color", self.highlight_color)
@@ -76,6 +80,7 @@ class AppSettings:
             model=qs.value("model", "", str),
             machine_check=qs.value("machine_check", False, bool),
             auto_next=qs.value("auto_next", False, bool),
+            format=qs.value("format", "docx", str),
             gdoc_token=qs.value("gdoc_token", "", str),
             gdoc_folder_id=qs.value("gdoc_folder_id", "", str),
             highlight_color=qs.value("highlight_color", "#80ffff00", str),
@@ -128,6 +133,12 @@ class SettingsDialog(QtWidgets.QDialog):
         self.auto_next_box = QtWidgets.QCheckBox()
         self.auto_next_box.setChecked(settings.auto_next)
 
+        self.format_combo = QtWidgets.QComboBox()
+        self.format_combo.addItems(["docx", "txt"])
+        index = self.format_combo.findText(settings.format)
+        if index != -1:
+            self.format_combo.setCurrentIndex(index)
+
         self.color_btn = QtWidgets.QPushButton()
         self._update_color_btn()
         self.color_btn.clicked.connect(self._choose_color)
@@ -138,6 +149,7 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Токен Google Docs", self.gdoc_token_edit)
         layout.addRow("ID папки Google Docs", self.gdoc_folder_edit)
         layout.addRow("Модель", self.model_combo)
+        layout.addRow("Формат", self.format_combo)
         layout.addRow("Машинная проверка", self.machine_check_box)
         layout.addRow("Следующая глава", self.auto_next_box)
         layout.addRow("Цвет подсветки", self.color_btn)
@@ -179,6 +191,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.model = self.model_combo.currentText()
         self.settings.machine_check = self.machine_check_box.isChecked()
         self.settings.auto_next = self.auto_next_box.isChecked()
+        self.settings.format = self.format_combo.currentText()
         self.settings.highlight_color = self._color.name(
             QtGui.QColor.NameFormat.HexArgb
         )

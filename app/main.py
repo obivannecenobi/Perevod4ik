@@ -17,6 +17,7 @@ from services.files import (
     load_docx,
     load_stats,
     save_docx,
+    save_txt,
 )
 from services.cloud import list_documents, load_document
 from services.reports import save_csv, save_html
@@ -254,24 +255,29 @@ class MainController:
         if not text:
             return
         src = self.chapters[idx]
+        ext = ".txt" if self.settings.format == "txt" else ".docx"
+        save_func = save_txt if self.settings.format == "txt" else save_docx
+
         if isinstance(src, tuple):
             _, name = src
             if self.settings.translation_path:
                 out_dir = Path(self.settings.translation_path)
                 out_dir.mkdir(parents=True, exist_ok=True)
-                out_path = out_dir / f"{name}.docx"
+                base = out_dir / name
             else:
-                out_path = Path(f"{name}_translated.docx")
-            save_docx(text, out_path)
+                base = Path(f"{name}_translated")
+            out_path = base.with_suffix(ext)
+            save_func(text, out_path)
             stat = {"chapter": name, "characters": len(text), "time": self.ui.elapsed}
         else:
             if self.settings.translation_path:
                 out_dir = Path(self.settings.translation_path)
                 out_dir.mkdir(parents=True, exist_ok=True)
-                out_path = out_dir / src.name
+                base = out_dir / src.stem
             else:
-                out_path = src.with_name(src.stem + "_translated.docx")
-            save_docx(text, out_path)
+                base = src.with_name(src.stem + "_translated")
+            out_path = base.with_suffix(ext)
+            save_func(text, out_path)
             stat = {"chapter": src.stem, "characters": len(text), "time": self.ui.elapsed}
         self.stats = append_stat(stat, self.stats_path)
         self.ui.reset_timer()
