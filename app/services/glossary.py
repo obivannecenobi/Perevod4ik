@@ -19,6 +19,7 @@ class Glossary:
 
     name: str
     entries: Dict[str, str] = field(default_factory=dict)
+    auto_to_prompt: bool = False
     file: Path | None = None
 
     # ------------------------------------------------------------------
@@ -46,7 +47,11 @@ class Glossary:
         file_path = Path(path) if path else self.file
         if file_path is None:
             raise ValueError("Path must be provided for unsaved glossaries")
-        data = {"name": self.name, "entries": self.entries}
+        data = {
+            "name": self.name,
+            "entries": self.entries,
+            "auto_to_prompt": self.auto_to_prompt,
+        }
         file_path.write_text(
             json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
         )
@@ -58,7 +63,11 @@ class Glossary:
 
         file_path = Path(path)
         data = json.loads(file_path.read_text(encoding="utf-8"))
-        obj = cls(name=data.get("name", file_path.stem), entries=data.get("entries", {}))
+        obj = cls(
+            name=data.get("name", file_path.stem),
+            entries=data.get("entries", {}),
+            auto_to_prompt=data.get("auto_to_prompt", False),
+        )
         obj.file = file_path
         return obj
 
