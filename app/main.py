@@ -19,7 +19,7 @@ from services.files import (
     save_docx,
 )
 from services.reports import save_csv, save_html
-from services.versioning import check_for_updates
+from services.versioning import check_for_updates, pull_updates
 from services.workers import DEFAULT_RATE_LIMITER, ModelWorker
 from ui_main import Ui_MainWindow
 from settings import AppSettings
@@ -239,7 +239,11 @@ def main() -> None:
     app = QtWidgets.QApplication(sys.argv)
     repo_root = Path(__file__).resolve().parent.parent
     if check_for_updates(repo_root):
-        QtWidgets.QMessageBox.information(None, "Обновление", "Доступны обновления приложения.")
+        success, message = pull_updates(repo_root)
+        if success:
+            QtWidgets.QMessageBox.information(None, "Обновление", "Приложение обновлено до последней версии.")
+        else:
+            QtWidgets.QMessageBox.warning(None, "Обновление", f"Не удалось обновить приложение: {message}")
     window = QtWidgets.QMainWindow()
     settings = AppSettings.load()
     ui = Ui_MainWindow()
