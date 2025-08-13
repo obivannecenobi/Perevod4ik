@@ -65,18 +65,20 @@ def init(settings: Any | None = None) -> None:
         ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
-    font_db = QtGui.QFontDatabase()
-
-    inter_id = font_db.addApplicationFont("Inter-VariableFont_opsz,wght.ttf")
+    inter_id = QtGui.QFontDatabase.addApplicationFont(
+        "Inter-VariableFont_opsz,wght.ttf"
+    )
     if inter_id != -1:
-        families = font_db.applicationFontFamilies(inter_id)
+        families = QtGui.QFontDatabase.applicationFontFamilies(inter_id)
         if families:
             global INTER_FONT
             INTER_FONT = families[0]
 
-    catt_id = font_db.addApplicationFont("Cattedrale[RUSbypenka220]-Regular.ttf")
+    catt_id = QtGui.QFontDatabase.addApplicationFont(
+        "Cattedrale[RUSbypenka220]-Regular.ttf"
+    )
     if catt_id != -1:
-        families = font_db.applicationFontFamilies(catt_id)
+        families = QtGui.QFontDatabase.applicationFontFamilies(catt_id)
         if families:
             global HEADER_FONT
             HEADER_FONT = families[0]
