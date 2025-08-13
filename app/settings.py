@@ -26,6 +26,10 @@ class AppSettings:
         Whether machine translation verification is enabled.
     auto_next:
         Move to the next chapter automatically after saving.
+    gdoc_token:
+        OAuth token for accessing Google Docs.
+    gdoc_folder_id:
+        Identifier of the Google Drive folder containing chapters.
     highlight_color:
         Background colour for diff highlighting in ARGB hex format.
     """
@@ -36,6 +40,8 @@ class AppSettings:
     model: str = ""
     machine_check: bool = False
     auto_next: bool = False
+    gdoc_token: str = ""
+    gdoc_folder_id: str = ""
     highlight_color: str = "#80ffff00"  # semi-transparent yellow
     _file: Path = field(default=Path("settings.ini"), repr=False)
 
@@ -51,6 +57,8 @@ class AppSettings:
         qs.setValue("model", self.model)
         qs.setValue("machine_check", self.machine_check)
         qs.setValue("auto_next", self.auto_next)
+        qs.setValue("gdoc_token", self.gdoc_token)
+        qs.setValue("gdoc_folder_id", self.gdoc_folder_id)
         qs.setValue("highlight_color", self.highlight_color)
         qs.sync()
         self._file = file_path
@@ -68,6 +76,8 @@ class AppSettings:
             model=qs.value("model", "", str),
             machine_check=qs.value("machine_check", False, bool),
             auto_next=qs.value("auto_next", False, bool),
+            gdoc_token=qs.value("gdoc_token", "", str),
+            gdoc_folder_id=qs.value("gdoc_folder_id", "", str),
             highlight_color=qs.value("highlight_color", "#80ffff00", str),
         )
         obj._file = file_path
@@ -102,6 +112,8 @@ class SettingsDialog(QtWidgets.QDialog):
         trans_layout.addWidget(trans_btn)
 
         self.api_key_edit = QtWidgets.QLineEdit(settings.api_key)
+        self.gdoc_token_edit = QtWidgets.QLineEdit(settings.gdoc_token)
+        self.gdoc_folder_edit = QtWidgets.QLineEdit(settings.gdoc_folder_id)
 
         self.model_combo = QtWidgets.QComboBox()
         self.model_combo.addItems(["gemini", "deepl", "grok", "qwen"])
@@ -123,6 +135,8 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Папка оригинала", orig_layout)
         layout.addRow("Папка перевода", trans_layout)
         layout.addRow("API ключ", self.api_key_edit)
+        layout.addRow("Токен Google Docs", self.gdoc_token_edit)
+        layout.addRow("ID папки Google Docs", self.gdoc_folder_edit)
         layout.addRow("Модель", self.model_combo)
         layout.addRow("Машинная проверка", self.machine_check_box)
         layout.addRow("Следующая глава", self.auto_next_box)
@@ -160,6 +174,8 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.original_path = self.original_edit.text()
         self.settings.translation_path = self.translation_edit.text()
         self.settings.api_key = self.api_key_edit.text()
+        self.settings.gdoc_token = self.gdoc_token_edit.text()
+        self.settings.gdoc_folder_id = self.gdoc_folder_edit.text()
         self.settings.model = self.model_combo.currentText()
         self.settings.machine_check = self.machine_check_box.isChecked()
         self.settings.auto_next = self.auto_next_box.isChecked()

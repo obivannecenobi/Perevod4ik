@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from queue import Queue
-from typing import Dict
+from typing import Dict, Tuple
 
 from PyQt6 import QtGui, QtWidgets
 
@@ -18,6 +18,7 @@ from services.files import (
     load_stats,
     save_docx,
 )
+from services.cloud import list_documents, load_document
 from services.reports import save_csv, save_html
 from services.versioning import check_for_updates, pull_updates
 from services.workers import DEFAULT_RATE_LIMITER, ModelWorker
@@ -32,7 +33,7 @@ class MainController:
         self.window = window
         self.ui = ui
         self.settings = settings
-        self.chapters: list[Path] = []
+        self.chapters: list[Path | Tuple[str, str]] = []
         self.worker: ModelWorker | None = None
         self.batch_queue: Queue[Path] | None = None
         base = Path(
@@ -95,12 +96,26 @@ class MainController:
     # ------------------------------------------------------------------
     # Chapter handling
     def _load_chapter_list(self) -> None:
+        token = getattr(self.settings, "gdoc_token", "")
+        folder_id = getattr(self.settings, "gdoc_folder_id", "")
+        self.ui.chapter_combo.clear()
+        if token and folder_id:
+            try:
+                self.chapters = list_documents(token, folder_id)
+            except Exception as exc:  # pragma: no cover - network/auth issues
+                QtWidgets.QMessageBox.critical(self.window, "Ошибка", str(exc))
+                self.chapters = []
+                return
+            for _, name in self.chapters:
+                self.ui.chapter_combo.addItem(name)
+            if self.chapters:
+                self.load_chapter(0)
+            return
         path = self.settings.original_path
         if not path:
             return
         folder = Path(path)
         self.chapters = sorted(iter_docx_files(folder))
-        self.ui.chapter_combo.clear()
         for file in self.chapters:
             self.ui.chapter_combo.addItem(file.stem)
         if self.chapters:
@@ -109,7 +124,16 @@ class MainController:
     def load_chapter(self, index: int) -> None:
         if not (0 <= index < len(self.chapters)):
             return
-        text = load_docx(self.chapters[index])
+        chapter = self.chapters[index]
+        if isinstance(chapter, tuple):
+            doc_id, _ = chapter
+            try:
+                text = load_document(self.settings.gdoc_token, doc_id)
+            except Exception as exc:  # pragma: no cover - network/auth issues
+                QtWidgets.QMessageBox.critical(self.window, "Ошибка", str(exc))
+                return
+        else:
+            text = load_docx(chapter)
         self.ui.original_edit.setPlainText(text)
         self.ui.translation_edit.clear()
         self.ui.reset_timer()
@@ -230,14 +254,25 @@ class MainController:
         if not text:
             return
         src = self.chapters[idx]
-        if self.settings.translation_path:
-            out_dir = Path(self.settings.translation_path)
-            out_dir.mkdir(parents=True, exist_ok=True)
-            out_path = out_dir / src.name
+        if isinstance(src, tuple):
+            _, name = src
+            if self.settings.translation_path:
+                out_dir = Path(self.settings.translation_path)
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / f"{name}.docx"
+            else:
+                out_path = Path(f"{name}_translated.docx")
+            save_docx(text, out_path)
+            stat = {"chapter": name, "characters": len(text), "time": self.ui.elapsed}
         else:
-            out_path = src.with_name(src.stem + "_translated.docx")
-        save_docx(text, out_path)
-        stat = {"chapter": src.stem, "characters": len(text), "time": self.ui.elapsed}
+            if self.settings.translation_path:
+                out_dir = Path(self.settings.translation_path)
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / src.name
+            else:
+                out_path = src.with_name(src.stem + "_translated.docx")
+            save_docx(text, out_path)
+            stat = {"chapter": src.stem, "characters": len(text), "time": self.ui.elapsed}
         self.stats = append_stat(stat, self.stats_path)
         self.ui.reset_timer()
         if self.settings.auto_next:
