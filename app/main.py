@@ -5,12 +5,12 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from queue import Queue
-from typing import Dict, Tuple
+from typing import Tuple
 
 from PyQt6 import QtGui, QtWidgets
 
-from models import get_translator, _MODELS
-from services.files import (
+from .models import get_translator, _MODELS
+from .services.files import (
     append_stat,
     enqueue_chapters,
     iter_docx_files,
@@ -19,12 +19,12 @@ from services.files import (
     save_docx,
     save_txt,
 )
-from services.cloud import list_documents, load_document
-from services.reports import save_csv, save_html
-from services.versioning import check_for_updates, pull_updates
-from services.workers import DEFAULT_RATE_LIMITER, ModelWorker
-from ui_main import Ui_MainWindow
-from settings import AppSettings
+from .services.cloud import list_documents, load_document
+from .services.reports import save_csv, save_html
+from .services.versioning import check_for_updates, pull_updates
+from .services.workers import DEFAULT_RATE_LIMITER, ModelWorker
+from .ui_main import Ui_MainWindow
+from .settings import AppSettings
 
 
 class MainController:
