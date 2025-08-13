@@ -20,19 +20,45 @@ class MorphologyError:
 class MorphologyService:
     """Service detecting common Russian morphology issues."""
 
-    _pattern = re.compile(r"\b[А-Яа-яёЁ]+(?:тся|ться)\b")
+    _rules = [
+        (
+            re.compile(r"\b[А-Яа-яёЁ]+(?:тся|ться)\b"),
+            "Проверьте окончание 'тся/ться'",
+        ),
+        (
+            re.compile(r"\b(?:жы|шы)[А-Яа-яёЁ]*\b", re.IGNORECASE),
+            "Возможно, ошибка: 'жи/ши' пишется через 'и'",
+        ),
+        (
+            re.compile(r"\s{2,}"),
+            "Лишние пробелы",
+        ),
+        (
+            re.compile(r"\s+[,.:;!?]"),
+            "Пробел перед знаком препинания",
+        ),
+        (
+            re.compile(r",(?=\S)"),
+            "Отсутствует пробел после запятой",
+        ),
+        (
+            re.compile(r"[!?]{2,}"),
+            "Избыточные знаки препинания",
+        ),
+    ]
 
     def analyze(self, text: str) -> List[MorphologyError]:
         """Return list of potential morphology errors in *text*."""
         errors: List[MorphologyError] = []
-        for match in self._pattern.finditer(text):
-            errors.append(
-                MorphologyError(
-                    start=match.start(),
-                    length=len(match.group(0)),
-                    message="Проверьте окончание 'тся/ться'",
+        for pattern, message in self._rules:
+            for match in pattern.finditer(text):
+                errors.append(
+                    MorphologyError(
+                        start=match.start(),
+                        length=len(match.group(0)),
+                        message=message,
+                    )
                 )
-            )
         return errors
 
 
