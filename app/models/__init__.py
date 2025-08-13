@@ -1,4 +1,4 @@
-"""Helpers for obtaining translator classes."""
+"""Helpers for obtaining translator classes and related utilities."""
 
 from __future__ import annotations
 
@@ -32,4 +32,28 @@ def get_translator(name: str):
     if not cls:
         raise ValueError(f"Unknown model: {name}")
     return cls()
+
+
+def fetch_synonyms_llm(word: str, model_name: str) -> list[str]:
+    """Generate synonyms for *word* using the specified *model_name*.
+
+    If the model cannot be initialised or the request fails, an empty
+    list is returned.
+    """
+
+    if not model_name:
+        return []
+    try:
+        translator = get_translator(model_name)
+    except Exception:
+        return []
+
+    prompt = (
+        "Provide a comma-separated list of synonyms for the following word."
+    )
+    try:
+        response = translator.translate(word, prompt=prompt)
+    except Exception:
+        return []
+    return [s.strip() for s in response.split(",") if s.strip()]
 
