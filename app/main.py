@@ -65,7 +65,7 @@ class MainController:
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+S"), self.window, activated=self.save_translation)
         QtGui.QShortcut(QtGui.QKeySequence("Alt+Right"), self.window, activated=self.next_chapter)
         QtGui.QShortcut(QtGui.QKeySequence("Alt+Left"), self.window, activated=self.prev_chapter)
-        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+G"), self.window, activated=lambda: self.ui.glossary.setFocus())
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+G"), self.window, activated=lambda: self.ui.glossary_table.setFocus())
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+1"), self.window, activated=lambda: self.ui.original_edit.setFocus())
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+2"), self.window, activated=lambda: self.ui.translation_edit.setFocus())
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+3"), self.window, activated=lambda: self.ui.mini_prompt_edit.setFocus())
@@ -110,12 +110,7 @@ class MainController:
     # ------------------------------------------------------------------
     # Translation workflow
     def _parse_glossary(self) -> Dict[str, str]:
-        entries: Dict[str, str] = {}
-        for line in self.ui.glossary.toPlainText().splitlines():
-            if "->" in line:
-                src, dst = line.split("->", 1)
-                entries[src.strip()] = dst.strip()
-        return entries
+        return self.ui.glossary_entries()
 
     def translate(self) -> None:
         text = self.ui.original_edit.toPlainText().strip()

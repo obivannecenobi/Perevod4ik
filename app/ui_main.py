@@ -8,6 +8,13 @@ import styles
 from pathlib import Path
 from services.versioning import VersionManager
 from services.morphology import MorphologyService, MorphologyHighlighter
+from services.glossary import (
+    Glossary,
+    create_glossary,
+    delete_glossary,
+    list_glossaries,
+    rename_glossary,
+)
 from settings import AppSettings, SettingsDialog
 from .diff_utils import DiffHighlighter
 
@@ -19,6 +26,7 @@ class Ui_MainWindow(object):
         styles.init()
 
         self.settings = settings or AppSettings.load()
+        self.current_glossary: Glossary | None = None
 
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -111,10 +119,39 @@ class Ui_MainWindow(object):
         self.morphology_highlighter.update_errors()
 
         # Glossary panel
-        self.glossary = QtWidgets.QTextEdit(parent=self.centralwidget)
-        self.glossary.setReadOnly(True)
-        self.glossary.setObjectName("glossary")
-        self.right_splitter.addWidget(self.glossary)
+        self.glossary_widget = QtWidgets.QWidget(parent=self.centralwidget)
+        self.glossary_layout = QtWidgets.QVBoxLayout(self.glossary_widget)
+        self.glossary_top = QtWidgets.QHBoxLayout()
+        self.glossary_combo = QtWidgets.QComboBox(parent=self.glossary_widget)
+        self.add_glossary_btn = QtWidgets.QPushButton("+", parent=self.glossary_widget)
+        self.rename_glossary_btn = QtWidgets.QPushButton("Rename", parent=self.glossary_widget)
+        self.delete_glossary_btn = QtWidgets.QPushButton("-", parent=self.glossary_widget)
+        self.glossary_top.addWidget(self.glossary_combo)
+        self.glossary_top.addWidget(self.add_glossary_btn)
+        self.glossary_top.addWidget(self.rename_glossary_btn)
+        self.glossary_top.addWidget(self.delete_glossary_btn)
+        self.glossary_table = QtWidgets.QTableWidget(parent=self.glossary_widget)
+        self.glossary_table.setColumnCount(2)
+        self.glossary_table.setHorizontalHeaderLabels(["Source", "Target"])
+        self.glossary_table.horizontalHeader().setStretchLastSection(True)
+        self.glossary_table.setObjectName("glossary")
+        self.pair_btn_layout = QtWidgets.QHBoxLayout()
+        self.add_pair_btn = QtWidgets.QPushButton("Add", parent=self.glossary_widget)
+        self.remove_pair_btn = QtWidgets.QPushButton("Remove", parent=self.glossary_widget)
+        self.pair_btn_layout.addWidget(self.add_pair_btn)
+        self.pair_btn_layout.addWidget(self.remove_pair_btn)
+        self.glossary_layout.addLayout(self.glossary_top)
+        self.glossary_layout.addWidget(self.glossary_table)
+        self.glossary_layout.addLayout(self.pair_btn_layout)
+        self.right_splitter.addWidget(self.glossary_widget)
+
+        self.glossary_combo.currentIndexChanged.connect(self._on_glossary_selected)
+        self.add_glossary_btn.clicked.connect(self._create_glossary)
+        self.rename_glossary_btn.clicked.connect(self._rename_glossary)
+        self.delete_glossary_btn.clicked.connect(self._delete_glossary)
+        self.add_pair_btn.clicked.connect(self._add_pair)
+        self.remove_pair_btn.clicked.connect(self._remove_pair)
+        self.glossary_table.itemChanged.connect(self._on_pair_edited)
 
         # Status/timer area
         self.status_layout = QtWidgets.QHBoxLayout()
@@ -128,7 +165,7 @@ class Ui_MainWindow(object):
         self.original_edit.setFont(base_font)
         self.translation_edit.setFont(base_font)
         self.mini_prompt_edit.setFont(base_font)
-        self.glossary.setFont(base_font)
+        self.glossary_table.setFont(base_font)
 
         # Style sheet applying colours
         style_sheet = f"""
@@ -141,7 +178,7 @@ class Ui_MainWindow(object):
             background-color: {styles.FIELD_BACKGROUND};
             color: {styles.TEXT_COLOR};
         }}
-        QTextEdit#glossary {{
+        QTableWidget#glossary {{
             background-color: {styles.GLOSSARY_BACKGROUND};
         }}
         QLabel#counter {{
@@ -164,6 +201,8 @@ class Ui_MainWindow(object):
         )
         self.undo_btn.clicked.connect(self._restore_prev)
         self.redo_btn.clicked.connect(self._restore_next)
+
+        self._load_glossaries()
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -221,6 +260,120 @@ class Ui_MainWindow(object):
             self.translation_counter.setText(str(len(text)))
             self.diff_highlighter.update_diff()
 
+    # --- glossary management ---------------------------------------------
+    def _load_glossaries(self) -> None:
+        folder = Path(self.settings.project_path or ".") / "glossaries"
+        folder.mkdir(parents=True, exist_ok=True)
+        self._glossary_folder = folder
+        self.glossary_combo.blockSignals(True)
+        self.glossary_combo.clear()
+        for path in list_glossaries(folder):
+            self.glossary_combo.addItem(path.stem, path)
+        self.glossary_combo.blockSignals(False)
+        if self.glossary_combo.count():
+            self.glossary_combo.setCurrentIndex(0)
+            current = self.glossary_combo.currentData()
+            if current:
+                self._load_glossary(Path(current))
+        else:
+            self.current_glossary = None
+            self.glossary_table.setRowCount(0)
+
+    def _load_glossary(self, path: Path) -> None:
+        self.current_glossary = Glossary.load(path)
+        self._populate_table()
+
+    def _populate_table(self) -> None:
+        self.glossary_table.blockSignals(True)
+        self.glossary_table.setRowCount(0)
+        if self.current_glossary:
+            for src, dst in self.current_glossary.entries.items():
+                row = self.glossary_table.rowCount()
+                self.glossary_table.insertRow(row)
+                self.glossary_table.setItem(row, 0, QtWidgets.QTableWidgetItem(src))
+                self.glossary_table.setItem(row, 1, QtWidgets.QTableWidgetItem(dst))
+        self.glossary_table.blockSignals(False)
+
+    def _on_glossary_selected(self, index: int) -> None:
+        path = self.glossary_combo.itemData(index)
+        if path:
+            self._load_glossary(Path(path))
+
+    def _create_glossary(self) -> None:
+        name, ok = QtWidgets.QInputDialog.getText(
+            self.centralwidget, "Новый глоссарий", "Название:"
+        )
+        if not ok or not name:
+            return
+        glossary = create_glossary(name, self._glossary_folder)
+        self.glossary_combo.addItem(name, glossary.file)
+        self.glossary_combo.setCurrentIndex(self.glossary_combo.count() - 1)
+
+    def _rename_glossary(self) -> None:
+        if not self.current_glossary:
+            return
+        new_name, ok = QtWidgets.QInputDialog.getText(
+            self.centralwidget,
+            "Переименовать глоссарий",
+            "Название:",
+            text=self.current_glossary.name,
+        )
+        if not ok or not new_name:
+            return
+        new_path = rename_glossary(self.current_glossary.file, new_name)
+        self.current_glossary.name = new_name
+        self.current_glossary.file = new_path
+        self.current_glossary.save()
+        idx = self.glossary_combo.currentIndex()
+        self.glossary_combo.setItemText(idx, new_name)
+        self.glossary_combo.setItemData(idx, new_path)
+
+    def _delete_glossary(self) -> None:
+        idx = self.glossary_combo.currentIndex()
+        if idx < 0:
+            return
+        path = self.glossary_combo.itemData(idx)
+        delete_glossary(path)
+        self.glossary_combo.removeItem(idx)
+        if self.glossary_combo.count():
+            self.glossary_combo.setCurrentIndex(0)
+        else:
+            self.current_glossary = None
+            self.glossary_table.setRowCount(0)
+
+    def _add_pair(self) -> None:
+        row = self.glossary_table.rowCount()
+        self.glossary_table.insertRow(row)
+        self.glossary_table.setItem(row, 0, QtWidgets.QTableWidgetItem(""))
+        self.glossary_table.setItem(row, 1, QtWidgets.QTableWidgetItem(""))
+
+    def _remove_pair(self) -> None:
+        row = self.glossary_table.currentRow()
+        if row < 0:
+            return
+        src_item = self.glossary_table.item(row, 0)
+        if src_item and self.current_glossary:
+            self.current_glossary.remove(src_item.text())
+            self.current_glossary.save()
+        self.glossary_table.removeRow(row)
+
+    def _on_pair_edited(self, row: int, column: int) -> None:
+        if not self.current_glossary:
+            return
+        src_item = self.glossary_table.item(row, 0)
+        dst_item = self.glossary_table.item(row, 1)
+        if src_item and dst_item:
+            src = src_item.text().strip()
+            dst = dst_item.text().strip()
+            if src:
+                self.current_glossary.add(src, dst)
+                self.current_glossary.save()
+
+    def glossary_entries(self) -> dict[str, str]:
+        if self.current_glossary:
+            return dict(self.current_glossary.entries)
+        return {}
+
     # --- translations -----------------------------------------------------
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -234,4 +387,9 @@ class Ui_MainWindow(object):
         self.mini_prompt_label.setText(_translate("MainWindow", "Мини-промпт"))
         self.settings_menu.setTitle(_translate("MainWindow", "Настройки"))
         self.settings_action.setText(_translate("MainWindow", "Параметры…"))
+        self.add_glossary_btn.setText(_translate("MainWindow", "+"))
+        self.rename_glossary_btn.setText(_translate("MainWindow", "Переименовать"))
+        self.delete_glossary_btn.setText(_translate("MainWindow", "-"))
+        self.add_pair_btn.setText(_translate("MainWindow", "Добавить"))
+        self.remove_pair_btn.setText(_translate("MainWindow", "Удалить"))
 
