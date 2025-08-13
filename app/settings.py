@@ -36,6 +36,9 @@ class AppSettings:
         Identifier of the Google Drive folder containing chapters.
     highlight_color:
         Background colour for diff highlighting in ARGB hex format.
+    chapter_template:
+        Template for naming saved chapters. Use "{n}" as a placeholder for the
+        chapter number.
     """
 
     original_path: str = ""
@@ -49,6 +52,7 @@ class AppSettings:
     gdoc_token: str = ""
     gdoc_folder_id: str = ""
     highlight_color: str = "#80ffff00"  # semi-transparent yellow
+    chapter_template: str = "глава {n}"
     _file: Path = field(default=Path("settings.ini"), repr=False)
 
     # --- persistence -------------------------------------------------
@@ -68,6 +72,7 @@ class AppSettings:
         qs.setValue("gdoc_token", self.gdoc_token)
         qs.setValue("gdoc_folder_id", self.gdoc_folder_id)
         qs.setValue("highlight_color", self.highlight_color)
+        qs.setValue("chapter_template", self.chapter_template)
         qs.sync()
         self._file = file_path
 
@@ -89,6 +94,7 @@ class AppSettings:
             gdoc_token=qs.value("gdoc_token", "", str),
             gdoc_folder_id=qs.value("gdoc_folder_id", "", str),
             highlight_color=qs.value("highlight_color", "#80ffff00", str),
+            chapter_template=qs.value("chapter_template", "глава {n}", str),
         )
         obj._file = file_path
         return obj
@@ -150,6 +156,8 @@ class SettingsDialog(QtWidgets.QDialog):
         if index != -1:
             self.format_combo.setCurrentIndex(index)
 
+        self.chapter_template_edit = QtWidgets.QLineEdit(settings.chapter_template)
+
         self.color_btn = QtWidgets.QPushButton()
         self._update_color_btn()
         self.color_btn.clicked.connect(self._choose_color)
@@ -165,6 +173,7 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Машинная проверка", self.machine_check_box)
         layout.addRow("Следующая глава", self.auto_next_box)
         layout.addRow("Цвет подсветки", self.color_btn)
+        layout.addRow("Шаблон главы", self.chapter_template_edit)
 
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok
@@ -208,6 +217,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.highlight_color = self._color.name(
             QtGui.QColor.NameFormat.HexArgb
         )
+        self.settings.chapter_template = self.chapter_template_edit.text()
         self.settings.save()
         super().accept()
 
