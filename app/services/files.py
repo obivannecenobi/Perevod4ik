@@ -85,6 +85,31 @@ def save_docx(text: str, path: Path | str) -> None:
         zf.writestr("word/document.xml", document_xml)
 
 
+def load_txt(path: Path | str) -> str:
+    """Read and return plain UTF-8 text from *path*.
+
+    The function simply opens the file using UTF-8 encoding and returns its
+    contents. It mirrors :func:`load_docx` for text files and is intentionally
+    small because the project only requires basic text handling.
+    """
+
+    file_path = Path(path)
+    with file_path.open("r", encoding="utf-8") as fh:
+        return fh.read()
+
+
+def save_txt(text: str, path: Path | str) -> None:
+    """Write *text* to *path* encoded as UTF-8.
+
+    This complements :func:`save_docx` and provides a lightweight way to store
+    translations in plain text format without any additional dependencies.
+    """
+
+    file_path = Path(path)
+    with file_path.open("w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
 def _build_document_xml(text: str) -> str:
     ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
     ET.register_namespace("w", ns)
