@@ -162,7 +162,7 @@ class Ui_MainWindow(object):
         # Status/timer area
         self.status_layout = QtWidgets.QHBoxLayout()
         self.status_layout.addStretch()
-        self.timer_label = QtWidgets.QLabel("00:00", parent=self.centralwidget)
+        self.timer_label = QtWidgets.QLabel("00:00:00", parent=self.centralwidget)
         self.status_layout.addWidget(self.timer_label)
         self.main_layout.addLayout(self.status_layout)
 
@@ -213,8 +213,9 @@ class Ui_MainWindow(object):
     # --- internal helpers -------------------------------------------------
     def _update_timer(self) -> None:
         self.elapsed += 1
-        minutes, seconds = divmod(self.elapsed, 60)
-        self.timer_label.setText(f"{minutes:02d}:{seconds:02d}")
+        hours, remainder = divmod(self.elapsed, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        self.timer_label.setText(f"{hours:02d}:{minutes:02d}:{seconds:02d}")
 
     def _start_timer(self) -> None:
         if not self.timer.isActive():
@@ -225,7 +226,7 @@ class Ui_MainWindow(object):
 
         self.timer.stop()
         self.elapsed = 0
-        self.timer_label.setText("00:00")
+        self.timer_label.setText("00:00:00")
 
     def _update_original_counter(self) -> None:
         self._start_timer()
