@@ -40,9 +40,9 @@ class Ui_MainWindow(object):
         print(f"Application version: {__version__}")
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
-        styles.init()
 
         self.settings = settings or AppSettings.load()
+        styles.init(self.settings)
         self.current_glossary: Glossary | None = None
         self._current_word: str = ""
         self._current_context: str = ""
@@ -253,16 +253,17 @@ class Ui_MainWindow(object):
         glow_rule = styles.neon_glow_rule(
             self.settings.neon_color, self.settings.neon_intensity
         )
+        focus_rule = styles.focus_hover_rule(self.settings.accent_color)
         style_sheet = f"""
         QWidget {{
-            background-color: {styles.APP_BACKGROUND};
-            color: {styles.TEXT_COLOR};
+            background-color: {self.settings.app_background};
+            color: {self.settings.text_color};
             font-family: {styles.INTER_FONT};
         }}
         QTextEdit,
         QLineEdit {{
             background-color: {styles.FIELD_BACKGROUND};
-            color: {styles.TEXT_COLOR};
+            color: {self.settings.text_color};
             border: 1px solid transparent;
         }}
         QTableWidget#glossary {{
@@ -273,6 +274,7 @@ class Ui_MainWindow(object):
             color: rgba(255, 255, 255, 128);
             font-size: 10px;
         }}
+        {focus_rule}
         {glow_rule}
         """
         self.centralwidget.setStyleSheet(style_sheet)

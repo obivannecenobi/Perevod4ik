@@ -54,6 +54,12 @@ class AppSettings:
         Identifier of the Google Drive folder containing chapters.
     highlight_color:
         Background colour for diff highlighting in ARGB hex format.
+    app_background:
+        Background colour of the main interface.
+    accent_color:
+        Accent colour for focused elements.
+    text_color:
+        Default text colour for widgets.
     chapter_template:
         Template for naming saved chapters. Use "{n}" as a placeholder for the
         chapter number.
@@ -77,6 +83,9 @@ class AppSettings:
     gdoc_token: str = ""
     gdoc_folder_id: str = ""
     highlight_color: str = "#80ffff00"  # semi-transparent yellow
+    app_background: str = styles.APP_BACKGROUND
+    accent_color: str = styles.ACCENT_COLOR
+    text_color: str = styles.TEXT_COLOR
     neon_color: str = styles.ACCENT_COLOR
     neon_intensity: int = 20
     chapter_template: str = "глава {n}"
@@ -106,6 +115,9 @@ class AppSettings:
         qs.setValue("gdoc_token", self.gdoc_token)
         qs.setValue("gdoc_folder_id", self.gdoc_folder_id)
         qs.setValue("highlight_color", self.highlight_color)
+        qs.setValue("app_background", self.app_background)
+        qs.setValue("accent_color", self.accent_color)
+        qs.setValue("text_color", self.text_color)
         qs.setValue("neon_color", self.neon_color)
         qs.setValue("neon_intensity", self.neon_intensity)
         qs.setValue("chapter_template", self.chapter_template)
@@ -137,6 +149,9 @@ class AppSettings:
             gdoc_token=qs.value("gdoc_token", "", str),
             gdoc_folder_id=qs.value("gdoc_folder_id", "", str),
             highlight_color=qs.value("highlight_color", "#80ffff00", str),
+            app_background=qs.value("app_background", styles.APP_BACKGROUND, str),
+            accent_color=qs.value("accent_color", styles.ACCENT_COLOR, str),
+            text_color=qs.value("text_color", styles.TEXT_COLOR, str),
             neon_color=qs.value("neon_color", styles.ACCENT_COLOR, str),
             neon_intensity=qs.value("neon_intensity", 20, int),
             chapter_template=qs.value("chapter_template", "глава {n}", str),
@@ -265,6 +280,46 @@ class SettingsDialog(QtWidgets.QDialog):
 
         self.chapter_template_edit = QtWidgets.QLineEdit(settings.chapter_template)
 
+        self.app_bg_edit = QtWidgets.QLineEdit(settings.app_background)
+        self.app_bg_btn = QtWidgets.QPushButton()
+        self.app_bg_btn.setStyleSheet(
+            f"background-color: {settings.app_background}"
+        )
+        self.app_bg_btn.clicked.connect(
+            lambda: self._choose_named_color(self.app_bg_edit, self.app_bg_btn)
+        )
+        self.app_bg_edit.textChanged.connect(
+            lambda text: self.app_bg_btn.setStyleSheet(f"background-color: {text}")
+        )
+
+        self.accent_color_edit = QtWidgets.QLineEdit(settings.accent_color)
+        self.accent_color_btn = QtWidgets.QPushButton()
+        self.accent_color_btn.setStyleSheet(
+            f"background-color: {settings.accent_color}"
+        )
+        self.accent_color_btn.clicked.connect(
+            lambda: self._choose_named_color(
+                self.accent_color_edit, self.accent_color_btn
+            )
+        )
+        self.accent_color_edit.textChanged.connect(
+            lambda text: self.accent_color_btn.setStyleSheet(
+                f"background-color: {text}"
+            )
+        )
+
+        self.text_color_edit = QtWidgets.QLineEdit(settings.text_color)
+        self.text_color_btn = QtWidgets.QPushButton()
+        self.text_color_btn.setStyleSheet(
+            f"background-color: {settings.text_color}"
+        )
+        self.text_color_btn.clicked.connect(
+            lambda: self._choose_named_color(self.text_color_edit, self.text_color_btn)
+        )
+        self.text_color_edit.textChanged.connect(
+            lambda text: self.text_color_btn.setStyleSheet(f"background-color: {text}")
+        )
+
         self.color_btn = QtWidgets.QPushButton()
         self._update_color_btn()
         self.color_btn.clicked.connect(self._choose_color)
@@ -293,6 +348,18 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Формат", self.format_combo)
         layout.addRow("Машинная проверка", self.machine_check_box)
         layout.addRow("Следующая глава", self.auto_next_box)
+        bg_layout = QtWidgets.QHBoxLayout()
+        bg_layout.addWidget(self.app_bg_edit)
+        bg_layout.addWidget(self.app_bg_btn)
+        layout.addRow("Фон приложения", bg_layout)
+        accent_layout = QtWidgets.QHBoxLayout()
+        accent_layout.addWidget(self.accent_color_edit)
+        accent_layout.addWidget(self.accent_color_btn)
+        layout.addRow("Акцентный цвет", accent_layout)
+        text_layout = QtWidgets.QHBoxLayout()
+        text_layout.addWidget(self.text_color_edit)
+        text_layout.addWidget(self.text_color_btn)
+        layout.addRow("Цвет текста", text_layout)
         layout.addRow("Цвет подсветки", self.color_btn)
         layout.addRow("Цвет свечения", self.neon_color_slider)
         layout.addRow("Интенсивность свечения", self.neon_intensity_slider)
@@ -421,6 +488,14 @@ class SettingsDialog(QtWidgets.QDialog):
             self._color = color
             self._update_color_btn()
 
+    def _choose_named_color(
+        self, edit: QtWidgets.QLineEdit, btn: QtWidgets.QPushButton
+    ) -> None:
+        color = QtWidgets.QColorDialog.getColor(QtGui.QColor(edit.text()), self)
+        if color.isValid():
+            edit.setText(color.name())
+            btn.setStyleSheet(f"background-color: {color.name()}")
+
     def _update_neon_preview(self) -> None:
         color = QtGui.QColor.fromHsv(
             self.neon_color_slider.value(),
@@ -467,6 +542,9 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.machine_check = self.machine_check_box.isChecked()
         self.settings.auto_next = self.auto_next_box.isChecked()
         self.settings.format = self.format_combo.currentText()
+        self.settings.app_background = self.app_bg_edit.text()
+        self.settings.accent_color = self.accent_color_edit.text()
+        self.settings.text_color = self.text_color_edit.text()
         self.settings.highlight_color = self._color.name(
             QtGui.QColor.NameFormat.HexArgb
         )
@@ -478,6 +556,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.neon_color = neon.name()
         self.settings.neon_intensity = self.neon_intensity_slider.value()
         self.settings.chapter_template = self.chapter_template_edit.text()
+        styles.init(self.settings)
         self.settings.save()
         super().accept()
 
