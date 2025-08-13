@@ -151,6 +151,7 @@ class Ui_MainWindow(object):
         self.glossary_top.addWidget(self.add_glossary_btn)
         self.glossary_top.addWidget(self.rename_glossary_btn)
         self.glossary_top.addWidget(self.delete_glossary_btn)
+        self.auto_prompt_checkbox = QtWidgets.QCheckBox(parent=self.glossary_widget)
         self.glossary_table = QtWidgets.QTableWidget(parent=self.glossary_widget)
         self.glossary_table.setColumnCount(2)
         self.glossary_table.setHorizontalHeaderLabels(["Source", "Target"])
@@ -162,6 +163,7 @@ class Ui_MainWindow(object):
         self.pair_btn_layout.addWidget(self.add_pair_btn)
         self.pair_btn_layout.addWidget(self.remove_pair_btn)
         self.glossary_layout.addLayout(self.glossary_top)
+        self.glossary_layout.addWidget(self.auto_prompt_checkbox)
         self.glossary_layout.addWidget(self.glossary_table)
         self.glossary_layout.addLayout(self.pair_btn_layout)
         self.right_splitter.addWidget(self.glossary_widget)
@@ -173,6 +175,7 @@ class Ui_MainWindow(object):
         self.add_pair_btn.clicked.connect(self._add_pair)
         self.remove_pair_btn.clicked.connect(self._remove_pair)
         self.glossary_table.itemChanged.connect(self._on_pair_edited)
+        self.auto_prompt_checkbox.toggled.connect(self._on_auto_prompt_toggled)
 
         # Status/timer area
         self.status_layout = QtWidgets.QHBoxLayout()
@@ -368,9 +371,15 @@ class Ui_MainWindow(object):
         else:
             self.current_glossary = None
             self.glossary_table.setRowCount(0)
+            self.auto_prompt_checkbox.blockSignals(True)
+            self.auto_prompt_checkbox.setChecked(False)
+            self.auto_prompt_checkbox.blockSignals(False)
 
     def _load_glossary(self, path: Path) -> None:
         self.current_glossary = Glossary.load(path)
+        self.auto_prompt_checkbox.blockSignals(True)
+        self.auto_prompt_checkbox.setChecked(self.current_glossary.auto_to_prompt)
+        self.auto_prompt_checkbox.blockSignals(False)
         self._populate_table()
 
     def _populate_table(self) -> None:
@@ -430,6 +439,9 @@ class Ui_MainWindow(object):
         else:
             self.current_glossary = None
             self.glossary_table.setRowCount(0)
+            self.auto_prompt_checkbox.blockSignals(True)
+            self.auto_prompt_checkbox.setChecked(False)
+            self.auto_prompt_checkbox.blockSignals(False)
 
     def _add_pair(self) -> None:
         row = self.glossary_table.rowCount()
@@ -459,6 +471,11 @@ class Ui_MainWindow(object):
                 self.current_glossary.add(src, dst)
                 self.current_glossary.save()
 
+    def _on_auto_prompt_toggled(self, checked: bool) -> None:
+        if self.current_glossary:
+            self.current_glossary.auto_to_prompt = checked
+            self.current_glossary.save()
+
     def glossary_entries(self) -> dict[str, str]:
         if self.current_glossary:
             return dict(self.current_glossary.entries)
@@ -481,6 +498,7 @@ class Ui_MainWindow(object):
         self.add_glossary_btn.setText(_translate("MainWindow", "+"))
         self.rename_glossary_btn.setText(_translate("MainWindow", "Переименовать"))
         self.delete_glossary_btn.setText(_translate("MainWindow", "-"))
+        self.auto_prompt_checkbox.setText(_translate("MainWindow", "Авто в промпт"))
         self.add_pair_btn.setText(_translate("MainWindow", "Добавить"))
         self.remove_pair_btn.setText(_translate("MainWindow", "Удалить"))
 
