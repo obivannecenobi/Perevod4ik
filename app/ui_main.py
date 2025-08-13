@@ -110,9 +110,9 @@ class Ui_MainWindow(object):
         # Setup diff highlighting for translation edits
         self.diff_highlighter = DiffHighlighter(self.translation_edit.document())
         self.morphology_service = MorphologyService()
-        self.morphology_highlighter = MorphologyHighlighter(
-            self.translation_edit.document(), self.morphology_service
-        )
+        self.morphology_highlighter: MorphologyHighlighter | None = None
+        if self.settings.machine_check:
+            self._enable_machine_check()
         self.original_translation = ""
 
         history_path = Path(self.settings.project_path or ".") / "versions.json"
@@ -123,7 +123,6 @@ class Ui_MainWindow(object):
             self.original_translation = self.version_manager.versions[0]["text"]
             self.diff_highlighter.set_base(self.original_translation)
             self.diff_highlighter.update_diff()
-        self.morphology_highlighter.update_errors()
 
         # Glossary panel
         self.glossary_widget = QtWidgets.QWidget(parent=self.centralwidget)
@@ -203,9 +202,6 @@ class Ui_MainWindow(object):
 
         self.original_edit.textChanged.connect(self._update_original_counter)
         self.translation_edit.textChanged.connect(self._update_translation_counter)
-        self.translation_edit.textChanged.connect(
-            self.morphology_highlighter.update_errors
-        )
         self.undo_btn.clicked.connect(self._restore_prev)
         self.redo_btn.clicked.connect(self._restore_next)
 
@@ -245,6 +241,30 @@ class Ui_MainWindow(object):
         self.version_manager.add_version(text)
         self.diff_highlighter.update_diff()
 
+    def _enable_machine_check(self) -> None:
+        if self.morphology_highlighter is None:
+            self.morphology_highlighter = MorphologyHighlighter(
+                self.translation_edit.document(), self.morphology_service
+            )
+            self.translation_edit.textChanged.connect(
+                self.morphology_highlighter.update_errors
+            )
+            self.morphology_highlighter.update_errors()
+
+    def _disable_machine_check(self) -> None:
+        if self.morphology_highlighter is not None:
+            try:
+                self.translation_edit.textChanged.disconnect(
+                    self.morphology_highlighter.update_errors
+                )
+            except TypeError:
+                pass
+            self.morphology_highlighter.errors = []
+            self.morphology_highlighter.rehighlight()
+            self.morphology_highlighter.setDocument(None)
+            self.morphology_highlighter.deleteLater()
+            self.morphology_highlighter = None
+
     def _show_synonym_menu(self, pos: QtCore.QPoint) -> None:
         cursor = self.translation_edit.cursorForPosition(pos)
         if not cursor.hasSelection():
@@ -273,8 +293,14 @@ class Ui_MainWindow(object):
         cursor.endEditBlock()
 
     def _open_settings(self) -> None:
+        previous = self.settings.machine_check
         dialog = SettingsDialog(self.settings, self.centralwidget)
-        dialog.exec()
+        result = dialog.exec()
+        if result == QtWidgets.QDialog.DialogCode.Accepted:
+            if self.settings.machine_check and not previous:
+                self._enable_machine_check()
+            elif not self.settings.machine_check and previous:
+                self._disable_machine_check()
 
     def _restore_prev(self) -> None:
         text = self.version_manager.undo()
