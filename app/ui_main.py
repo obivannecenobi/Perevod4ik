@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtGui import QIcon
 
 import styles
 from . import __version__
-from pathlib import Path
 from services.versioning import VersionManager
 from services.morphology import MorphologyService, MorphologyHighlighter
 from services.glossary import (
@@ -22,6 +25,14 @@ from settings import AppSettings, SettingsDialog
 from services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
 from models import fetch_synonyms_llm
 from .diff_utils import DiffHighlighter
+
+def resource_path(name: str) -> str:
+    """Return absolute path to resource, compatible with PyInstaller."""
+    base_path = getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)
+    path = Path(base_path) / name
+    if not path.exists():
+        path = Path(base_path).parent / name
+    return str(path)
 
 
 class Ui_MainWindow(object):
@@ -45,6 +56,7 @@ class Ui_MainWindow(object):
         self.menu_bar = MainWindow.menuBar()
         self.settings_menu = self.menu_bar.addMenu("")
         self.settings_action = QtGui.QAction(parent=MainWindow)
+        self.settings_action.setIcon(QIcon(resource_path("настройки.png")))
         self.settings_menu.addAction(self.settings_action)
         self.settings_action.triggered.connect(self._open_settings)
 
@@ -55,6 +67,7 @@ class Ui_MainWindow(object):
         self.next_btn = QtWidgets.QPushButton(parent=self.centralwidget)
         self.model_combo = QtWidgets.QComboBox(parent=self.centralwidget)
         self.save_btn = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.save_btn.setIcon(QIcon(resource_path("сохранить.png")))
         self.nav_layout.addWidget(self.prev_btn)
         self.nav_layout.addWidget(self.chapter_combo)
         self.nav_layout.addWidget(self.next_btn)
