@@ -8,13 +8,23 @@ from PyQt6 import QtGui
 class DiffHighlighter(QtGui.QSyntaxHighlighter):
     """Highlight differences from a baseline text."""
 
-    def __init__(self, document: QtGui.QTextDocument, base: str = "") -> None:
+    def __init__(
+        self,
+        document: QtGui.QTextDocument,
+        base: str = "",
+        color: QtGui.QColor | str | None = None,
+    ) -> None:
         super().__init__(document)
         self._base = base
         self._diff_ranges: list[tuple[int, int]] = []
         self._fmt = QtGui.QTextCharFormat()
-        # Using a subtle yellow background for changed text
-        self._fmt.setBackground(QtGui.QColor(255, 255, 0, 128))
+        self.set_color(color or QtGui.QColor(255, 255, 0, 128))
+
+    def set_color(self, color: QtGui.QColor | str) -> None:
+        if isinstance(color, str):
+            color = QtGui.QColor(color)
+        self._fmt.setBackground(color)
+        self.rehighlight()
 
     def set_base(self, text: str) -> None:
         """Set baseline *text* for future comparisons."""

@@ -114,14 +114,23 @@ class Ui_MainWindow(object):
         self.right_splitter.addWidget(self.translation_widget)
 
         # Setup diff highlighting for translation edits
-        self.diff_highlighter = DiffHighlighter(self.translation_edit.document())
+        self.diff_highlighter = DiffHighlighter(
+            self.translation_edit.document(),
+            color=self.settings.highlight_color,
+        )
         self.morphology_service = MorphologyService()
         self.morphology_highlighter: MorphologyHighlighter | None = None
         if self.settings.machine_check:
             self._enable_machine_check()
         self.original_translation = ""
 
-        history_path = Path(self.settings.project_path or ".") / "versions.json"
+        base = Path(
+            self.settings.translation_path
+            or self.settings.original_path
+            or "."
+        )
+        base.mkdir(parents=True, exist_ok=True)
+        history_path = base / "versions.json"
         self.version_manager = VersionManager(history_path)
         if self.version_manager.versions:
             last = self.version_manager.versions[self.version_manager.index]["text"]
@@ -316,6 +325,7 @@ class Ui_MainWindow(object):
                 self._enable_machine_check()
             elif not self.settings.machine_check and previous:
                 self._disable_machine_check()
+            self.diff_highlighter.set_color(self.settings.highlight_color)
 
     def _restore_prev(self) -> None:
         text = self.version_manager.undo()
@@ -337,7 +347,12 @@ class Ui_MainWindow(object):
 
     # --- glossary management ---------------------------------------------
     def _load_glossaries(self) -> None:
-        folder = Path(self.settings.project_path or ".") / "glossaries"
+        base = Path(
+            self.settings.translation_path
+            or self.settings.original_path
+            or "."
+        )
+        folder = base / "glossaries"
         folder.mkdir(parents=True, exist_ok=True)
         self._glossary_folder = folder
         self.glossary_combo.blockSignals(True)
