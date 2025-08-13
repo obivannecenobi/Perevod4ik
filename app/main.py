@@ -9,7 +9,7 @@ from typing import Dict
 
 from PyQt6 import QtGui, QtWidgets
 
-from models import get_translator
+from models import get_translator, _MODELS
 from services.files import (
     append_stat,
     enqueue_chapters,
@@ -58,6 +58,17 @@ class MainController:
         self.ui.prev_btn.clicked.connect(self.prev_chapter)
         self.ui.next_btn.clicked.connect(self.next_chapter)
         self.ui.chapter_combo.currentIndexChanged.connect(self.load_chapter)
+
+        # model selection and saving
+        self.ui.model_combo.addItems(sorted(_MODELS.keys()))
+        if self.settings.model:
+            idx = self.ui.model_combo.findText(self.settings.model)
+            if idx != -1:
+                self.ui.model_combo.setCurrentIndex(idx)
+        self.ui.model_combo.currentTextChanged.connect(
+            lambda name: setattr(self.settings, "model", name)
+        )
+        self.ui.save_btn.clicked.connect(self.save_translation)
 
         # shortcuts
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Enter"), self.window, activated=self.translate)
