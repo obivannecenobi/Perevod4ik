@@ -35,7 +35,13 @@ class MainController:
         self.chapters: list[Path] = []
         self.worker: ModelWorker | None = None
         self.batch_queue: Queue[Path] | None = None
-        self.stats_path = Path(self.settings.project_path or ".") / "stats.json"
+        base = Path(
+            self.settings.translation_path
+            or self.settings.original_path
+            or "."
+        )
+        base.mkdir(parents=True, exist_ok=True)
+        self.stats_path = base / "stats.json"
         self.stats = load_stats(self.stats_path)
 
         self._init_ui()
@@ -89,7 +95,7 @@ class MainController:
     # ------------------------------------------------------------------
     # Chapter handling
     def _load_chapter_list(self) -> None:
-        path = self.settings.project_path
+        path = self.settings.original_path
         if not path:
             return
         folder = Path(path)
@@ -159,7 +165,7 @@ class MainController:
     # ------------------------------------------------------------------
     # Batch translation
     def batch_translate(self) -> None:
-        path = self.settings.project_path
+        path = self.settings.original_path
         if not path:
             return
         queue: Queue[Path] = Queue()
@@ -200,7 +206,12 @@ class MainController:
 
     def _on_batch_translation_finished(self, src: Path, result: str) -> None:
         self.ui.translation_edit.setPlainText(result)
-        out_path = src.with_name(src.stem + "_translated.docx")
+        if self.settings.translation_path:
+            out_dir = Path(self.settings.translation_path)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            out_path = out_dir / src.name
+        else:
+            out_path = src.with_name(src.stem + "_translated.docx")
         save_docx(result, out_path)
         self._process_queue()
 
@@ -219,18 +230,29 @@ class MainController:
         if not text:
             return
         src = self.chapters[idx]
-        out_path = src.with_name(src.stem + "_translated.docx")
+        if self.settings.translation_path:
+            out_dir = Path(self.settings.translation_path)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            out_path = out_dir / src.name
+        else:
+            out_path = src.with_name(src.stem + "_translated.docx")
         save_docx(text, out_path)
         stat = {"chapter": src.stem, "characters": len(text), "time": self.ui.elapsed}
         self.stats = append_stat(stat, self.stats_path)
         self.ui.reset_timer()
+        if self.settings.auto_next:
+            self.next_chapter()
 
     # ------------------------------------------------------------------
     def export_report(self) -> None:
         if not self.stats:
             QtWidgets.QMessageBox.information(self.window, "Отчёт", "Нет данных для отчёта.")
             return
-        default_dir = Path(self.settings.project_path or ".")
+        default_dir = Path(
+            self.settings.translation_path
+            or self.settings.original_path
+            or "."
+        )
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
             self.window,
             "Сохранить отчёт",
