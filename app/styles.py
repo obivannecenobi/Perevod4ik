@@ -71,7 +71,11 @@ def init(settings: Any | None = None) -> None:
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
     inter_id = QtGui.QFontDatabase.addApplicationFont(
+ codex/replace-absolute-imports-with-relative-in-app-t5cpwo
         str(FONT_DIR / "Inter-VariableFont_opsz,wght.ttf")
+=======
+        "Inter-VariableFont_opsz,wght.ttf"
+        main
     )
     if inter_id != -1:
         families = QtGui.QFontDatabase.applicationFontFamilies(inter_id)
@@ -80,7 +84,11 @@ def init(settings: Any | None = None) -> None:
             INTER_FONT = families[0]
 
     catt_id = QtGui.QFontDatabase.addApplicationFont(
+ codex/replace-absolute-imports-with-relative-in-app-t5cpwo
         str(FONT_DIR / "Cattedrale[RUSbypenka220]-Regular.ttf")
+=======
+        "Cattedrale[RUSbypenka220]-Regular.ttf"
+        main
     )
     if catt_id != -1:
         families = QtGui.QFontDatabase.applicationFontFamilies(catt_id)
