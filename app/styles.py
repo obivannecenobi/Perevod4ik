@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from PyQt6 import QtGui
 from pathlib import Path
 from typing import Any
+
+from PyQt6 import QtGui
 
 # Color palette (dark theme)
 APP_BACKGROUND = "#212121"
