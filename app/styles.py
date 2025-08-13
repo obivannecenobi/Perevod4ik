@@ -61,6 +61,17 @@ QTableWidget#glossary:hover {{
 """.strip()
 
 
+def _register_font(filename: str) -> str | None:
+    """Register *filename* from :data:`FONT_DIR` and return its family."""
+
+    font_id = QtGui.QFontDatabase.addApplicationFont(str(FONT_DIR / filename))
+    if font_id != -1:
+        families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
+        if families:
+            return families[0]
+    return None
+
+
 def init(settings: Any | None = None) -> None:
     """Load bundled fonts and apply user-selected colours."""
 
@@ -70,6 +81,15 @@ def init(settings: Any | None = None) -> None:
         ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
+ codex/replace-absolute-imports-with-relative-in-app-s0f27c
+    if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
+        global INTER_FONT
+        INTER_FONT = family
+
+    if family := _register_font("Cattedrale[RUSbypenka220]-Regular.ttf"):
+        global HEADER_FONT
+        HEADER_FONT = family
+=======
     inter_id = QtGui.QFontDatabase.addApplicationFont(
  codex/replace-absolute-imports-with-relative-in-app-t5cpwo
         str(FONT_DIR / "Inter-VariableFont_opsz,wght.ttf")
@@ -95,4 +115,5 @@ def init(settings: Any | None = None) -> None:
         if families:
             global HEADER_FONT
             HEADER_FONT = families[0]
+        main
 
