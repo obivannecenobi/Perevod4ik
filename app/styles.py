@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from PyQt6 import QtGui
+from pathlib import Path
 from typing import Any
+
+from PyQt6 import QtGui
 
 # Color palette (dark theme)
 APP_BACKGROUND = "#212121"
@@ -15,6 +17,9 @@ ACCENT_COLOR = "#00E5FF"
 # Font family names are populated at runtime in :func:`init`.
 INTER_FONT = "Inter"
 HEADER_FONT = "Cattedrale"
+
+# Directory containing bundled font files
+FONT_DIR = Path(__file__).resolve().parent / "fonts"
 
 
 def focus_hover_rule(color: str) -> str:
@@ -56,28 +61,31 @@ QTableWidget#glossary:hover {{
 """.strip()
 
 
+def _register_font(filename: str) -> str | None:
+    """Register *filename* from :data:`FONT_DIR` and return its family."""
+
+    font_id = QtGui.QFontDatabase.addApplicationFont(str(FONT_DIR / filename))
+    if font_id != -1:
+        families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
+        if families:
+            return families[0]
+    return None
+
+
 def init(settings: Any | None = None) -> None:
     """Load bundled fonts and apply user-selected colours."""
 
+    global APP_BACKGROUND, ACCENT_COLOR, TEXT_COLOR, INTER_FONT, HEADER_FONT
+
     if settings is not None:
-        global APP_BACKGROUND, ACCENT_COLOR, TEXT_COLOR
         APP_BACKGROUND = getattr(settings, "app_background", APP_BACKGROUND)
         ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
 
-    font_db = QtGui.QFontDatabase()
+    if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
+        INTER_FONT = family
 
-    inter_id = font_db.addApplicationFont("Inter-VariableFont_opsz,wght.ttf")
-    if inter_id != -1:
-        families = font_db.applicationFontFamilies(inter_id)
-        if families:
-            global INTER_FONT
-            INTER_FONT = families[0]
+    if family := _register_font("Cattedrale[RUSbypenka220]-Regular.ttf"):
+        HEADER_FONT = family
 
-    catt_id = font_db.addApplicationFont("Cattedrale[RUSbypenka220]-Regular.ttf")
-    if catt_id != -1:
-        families = font_db.applicationFontFamilies(catt_id)
-        if families:
-            global HEADER_FONT
-            HEADER_FONT = families[0]
 

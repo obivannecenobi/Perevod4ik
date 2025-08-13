@@ -7,9 +7,9 @@ from pathlib import Path
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
-import styles
-from services.files import load_stats, save_stats
-from services.glossary import Glossary, list_glossaries
+from . import styles
+from .services.files import load_stats, save_stats
+from .services.glossary import Glossary, list_glossaries
 
 
 @dataclass
@@ -450,19 +450,19 @@ class SettingsDialog(QtWidgets.QDialog):
             return
         try:
             if name == "gemini":
-                from models.gemini import GeminiTranslator
+                from .models.gemini import GeminiTranslator
 
                 GeminiTranslator(key).translate("ping")
             elif name == "deepl":
-                from models.deepl import DeepLTranslator
+                from .models.deepl import DeepLTranslator
 
                 DeepLTranslator(key).translate("ping")
             elif name == "grok":
-                from models.grok import GrokTranslator
+                from .models.grok import GrokTranslator
 
                 GrokTranslator(key).translate("ping")
             elif name == "qwen":
-                from models.qwen import QwenTranslator
+                from .models.qwen import QwenTranslator
 
                 QwenTranslator(key).translate("ping")
             success = True
