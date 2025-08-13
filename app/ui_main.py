@@ -5,18 +5,28 @@ from __future__ import annotations
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 import styles
+from settings import AppSettings, SettingsDialog
 
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupUi(self, MainWindow, settings: AppSettings | None = None):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
         styles.init()
+
+        self.settings = settings or AppSettings.load()
 
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.main_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+
+        # Menu bar
+        self.menu_bar = MainWindow.menuBar()
+        self.settings_menu = self.menu_bar.addMenu("")
+        self.settings_action = QtGui.QAction(parent=MainWindow)
+        self.settings_menu.addAction(self.settings_action)
+        self.settings_action.triggered.connect(self._open_settings)
 
         # Navigation bar
         self.nav_layout = QtWidgets.QHBoxLayout()
@@ -143,6 +153,10 @@ class Ui_MainWindow(object):
         self._start_timer()
         self.translation_counter.setText(str(len(self.translation_edit.toPlainText())))
 
+    def _open_settings(self) -> None:
+        dialog = SettingsDialog(self.settings, self.centralwidget)
+        dialog.exec()
+
     # --- translations -----------------------------------------------------
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -152,4 +166,6 @@ class Ui_MainWindow(object):
         self.original_label.setText(_translate("MainWindow", "Оригинал"))
         self.translation_label.setText(_translate("MainWindow", "Перевод"))
         self.mini_prompt_label.setText(_translate("MainWindow", "Мини-промпт"))
+        self.settings_menu.setTitle(_translate("MainWindow", "Настройки"))
+        self.settings_action.setText(_translate("MainWindow", "Параметры…"))
 
