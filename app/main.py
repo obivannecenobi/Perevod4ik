@@ -66,6 +66,10 @@ class MainController:
         self.buttons_layout.addWidget(self.translate_btn)
         self.buttons_layout.addWidget(self.batch_btn)
         self.ui.translation_layout.insertLayout(0, self.buttons_layout)
+        self.ui.translation_layout.setStretch(0, 0)
+        self.ui.translation_layout.setStretch(1, 1)
+        self.ui.translation_layout.setStretch(2, 0)
+        self.ui.translation_layout.setStretch(3, 0)
         self.translate_btn.clicked.connect(self.translate)
         self.batch_btn.clicked.connect(self.batch_translate)
 
