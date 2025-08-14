@@ -127,18 +127,25 @@ class Ui_MainWindow(object):
         self.redo_btn = QtWidgets.QPushButton(parent=self.translation_widget)
         self.version_layout.addWidget(self.undo_btn)
         self.version_layout.addWidget(self.redo_btn)
-        self.mini_prompt_label = QtWidgets.QLabel(parent=self.translation_widget)
-        self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.translation_widget)
         self.translation_layout.addWidget(self.translation_label)
         self.translation_layout.addWidget(self.translation_edit)
         self.translation_layout.addWidget(self.translation_counter)
         self.translation_layout.addLayout(self.version_layout)
-        self.translation_layout.addWidget(self.mini_prompt_label)
-        self.translation_layout.addWidget(self.mini_prompt_edit)
         self.translation_layout.setStretch(1, 1)
         self.h_splitter.addWidget(self.translation_widget)
         self.h_splitter.setStretchFactor(0, 1)
         self.h_splitter.setStretchFactor(1, 1)
+
+        # Mini-prompt section below the splitter
+        self.mini_prompt_widget = QtWidgets.QWidget(parent=self.centralwidget)
+        self.mini_prompt_layout = QtWidgets.QVBoxLayout(self.mini_prompt_widget)
+        self.mini_prompt_label = QtWidgets.QLabel(parent=self.mini_prompt_widget)
+        self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
+        self.mini_prompt_layout.addWidget(self.mini_prompt_label)
+        self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
+        index = self.main_layout.indexOf(self.h_splitter)
+        self.main_layout.insertWidget(index + 1, self.mini_prompt_widget)
+        self.main_layout.setStretch(1, 0)
 
         # Setup diff highlighting for translation edits
         self.diff_highlighter = DiffHighlighter(
