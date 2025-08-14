@@ -94,13 +94,16 @@ class Ui_MainWindow(object):
         self.nav_layout.addWidget(self.next_btn)
         self.nav_layout.addWidget(self.model_combo)
         self.nav_layout.addWidget(self.save_btn)
+        self.toggle_glossary_btn = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.toggle_glossary_btn.setIcon(QIcon(resource_path("свернуть.png")))
+        self.toggle_glossary_btn.setCheckable(True)
+        self.nav_layout.addWidget(self.toggle_glossary_btn)
         self.main_layout.addLayout(self.nav_layout)
 
         # Splitter separating original and translation
         self.h_splitter = QtWidgets.QSplitter(
             QtCore.Qt.Orientation.Horizontal, parent=self.centralwidget
         )
-        self.main_layout.addWidget(self.h_splitter)
 
         # Original text section
         self.original_widget = QtWidgets.QWidget()
@@ -147,16 +150,7 @@ class Ui_MainWindow(object):
         self.h_splitter.setStretchFactor(0, 1)
         self.h_splitter.setStretchFactor(1, 1)
 
-        # Mini-prompt section below the splitter
-        self.mini_prompt_widget = QtWidgets.QWidget(parent=self.centralwidget)
-        self.mini_prompt_layout = QtWidgets.QVBoxLayout(self.mini_prompt_widget)
-        self.mini_prompt_layout.setContentsMargins(0, 0, 0, 0)
-        self.mini_prompt_layout.setSpacing(4)
-        self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
-        self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
-        index = self.main_layout.indexOf(self.h_splitter)
-        self.main_layout.insertWidget(index + 1, self.mini_prompt_widget)
-        self.main_layout.setStretch(1, 0)
+        # Mini-prompt will be inserted after the main splitter
 
         # Setup diff highlighting for translation edits
         self.diff_highlighter = DiffHighlighter(
@@ -193,8 +187,7 @@ class Ui_MainWindow(object):
         self.glossary_top.setContentsMargins(0, 0, 0, 0)
         self.glossary_top.setSpacing(4)
         self.glossary_combo = QtWidgets.QComboBox(parent=self.glossary_widget)
-        self.add_glossary_btn = QtWidgets.QPushButton("+", parent=self.glossary_widget)
-        self.add_glossary_btn.setFixedSize(24, 24)
+        self.add_glossary_btn = QtWidgets.QPushButton("Создать", parent=self.glossary_widget)
         self.rename_glossary_btn = QtWidgets.QPushButton("Rename", parent=self.glossary_widget)
         self.delete_glossary_btn = QtWidgets.QPushButton("-", parent=self.glossary_widget)
         self.delete_glossary_btn.setFixedSize(24, 24)
@@ -223,7 +216,25 @@ class Ui_MainWindow(object):
         self.glossary_layout.addWidget(self.auto_prompt_checkbox)
         self.glossary_layout.addWidget(self.glossary_table)
         self.glossary_layout.addLayout(self.pair_btn_layout)
-        self.main_layout.addWidget(self.glossary_widget)
+
+        self.main_splitter = QtWidgets.QSplitter(
+            QtCore.Qt.Orientation.Horizontal, parent=self.centralwidget
+        )
+        self.main_splitter.addWidget(self.h_splitter)
+        self.main_splitter.addWidget(self.glossary_widget)
+        self.main_layout.addWidget(self.main_splitter)
+        self._splitter_sizes = self.main_splitter.sizes()
+
+        # Mini-prompt section below the splitter
+        self.mini_prompt_widget = QtWidgets.QWidget(parent=self.centralwidget)
+        self.mini_prompt_layout = QtWidgets.QVBoxLayout(self.mini_prompt_widget)
+        self.mini_prompt_layout.setContentsMargins(0, 0, 0, 0)
+        self.mini_prompt_layout.setSpacing(4)
+        self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
+        self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
+        index = self.main_layout.indexOf(self.main_splitter)
+        self.main_layout.insertWidget(index + 1, self.mini_prompt_widget)
+        self.main_layout.setStretch(index, 1)
 
         self.glossary_combo.currentIndexChanged.connect(self._on_glossary_selected)
         self.add_glossary_btn.clicked.connect(self._create_glossary)
@@ -235,6 +246,7 @@ class Ui_MainWindow(object):
         self.remove_pair_btn.clicked.connect(self._remove_pair)
         self.glossary_table.itemChanged.connect(self._on_pair_edited)
         self.auto_prompt_checkbox.toggled.connect(self._on_auto_prompt_toggled)
+        self.toggle_glossary_btn.toggled.connect(self._toggle_glossary)
 
         # Status/timer area
         self.status_layout = QtWidgets.QHBoxLayout()
@@ -459,6 +471,16 @@ class Ui_MainWindow(object):
             self.translation_counter.setText(str(len(text)))
             self.diff_highlighter.update_diff()
 
+    def _toggle_glossary(self, checked: bool) -> None:
+        if checked:
+            self._splitter_sizes = self.main_splitter.sizes()
+            self.main_splitter.setSizes([1, 0])
+        else:
+            if hasattr(self, "_splitter_sizes"):
+                self.main_splitter.setSizes(self._splitter_sizes)
+            else:
+                self.main_splitter.setSizes([1, 1])
+
     # --- glossary management ---------------------------------------------
     def _load_glossaries(self) -> None:
         base = Path(
@@ -631,7 +653,7 @@ class Ui_MainWindow(object):
         self.mini_prompt_edit.setPlaceholderText(_translate("MainWindow", "Мини-промпт"))
         self.settings_menu.setTitle(_translate("MainWindow", "Настройки"))
         self.settings_action.setText(_translate("MainWindow", "Параметры…"))
-        self.add_glossary_btn.setText(_translate("MainWindow", "+"))
+        self.add_glossary_btn.setText(_translate("MainWindow", "Создать"))
         self.rename_glossary_btn.setText(_translate("MainWindow", "Переименовать"))
         self.delete_glossary_btn.setText(_translate("MainWindow", "-"))
         self.import_glossary_btn.setText(_translate("MainWindow", "Импорт"))
