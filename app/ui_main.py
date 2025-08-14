@@ -302,10 +302,12 @@ class Ui_MainWindow(object):
             background-color: {styles.FIELD_BACKGROUND};
             color: {self.settings.text_color};
             border: 1px solid transparent;
+            border-radius: 6px;
         }}
         QTableWidget#glossary {{
             background-color: {styles.GLOSSARY_BACKGROUND};
             border: 1px solid transparent;
+            border-radius: 6px;
         }}
         QLabel#counter {{
             color: rgba(255, 255, 255, 128);
