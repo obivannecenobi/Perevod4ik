@@ -98,7 +98,7 @@ class Ui_MainWindow(object):
 
         # Splitter separating original and translation
         self.h_splitter = QtWidgets.QSplitter(
-            QtCore.Qt.Horizontal, parent=self.centralwidget
+            QtCore.Qt.Orientation.Horizontal, parent=self.centralwidget
         )
         self.main_layout.addWidget(self.h_splitter)
 
