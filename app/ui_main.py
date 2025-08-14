@@ -46,6 +46,7 @@ class Ui_MainWindow(object):
         self.current_glossary: Glossary | None = None
         self._current_word: str = ""
         self._current_context: str = ""
+        self._updating_translation = False
 
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -302,14 +303,21 @@ class Ui_MainWindow(object):
         self.original_counter.setText(str(len(self.original_edit.toPlainText())))
 
     def _update_translation_counter(self) -> None:
-        self._start_timer()
-        text = self.translation_edit.toPlainText()
-        self.translation_counter.setText(str(len(text)))
-        if not self.original_translation:
-            self.original_translation = text
-            self.diff_highlighter.set_base(text)
-        self.version_manager.add_version(text)
-        self.diff_highlighter.update_diff()
+        if self._updating_translation:
+            return
+        self._updating_translation = True
+        try:
+            self._start_timer()
+            text = self.translation_edit.toPlainText()
+            with QtCore.QSignalBlocker(self.translation_edit):
+                self.translation_counter.setText(str(len(text)))
+                if not self.original_translation:
+                    self.original_translation = text
+                    self.diff_highlighter.set_base(text)
+                self.version_manager.add_version(text)
+                self.diff_highlighter.update_diff()
+        finally:
+            self._updating_translation = False
 
     def _on_cursor_position_changed(self) -> None:
         cursor = self.translation_edit.textCursor()
