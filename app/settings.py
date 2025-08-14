@@ -62,6 +62,12 @@ class AppSettings:
         Default text colour for widgets.
     font_size:
         Base font size for text areas and tables.
+    neon_color:
+        Colour of the neon glow for focused elements.
+    neon_intensity:
+        Stored brightness value for the glow colour.
+    neon_width:
+        Border width of the glow effect.
     chapter_template:
         Template for naming saved chapters. Use "{n}" as a placeholder for the
         chapter number.
@@ -90,6 +96,7 @@ class AppSettings:
     text_color: str = styles.TEXT_COLOR
     neon_color: str = styles.ACCENT_COLOR
     neon_intensity: int = 20
+    neon_width: int = 10
     font_size: int = 10
     chapter_template: str = "глава {n}"
     _file: Path = field(default=Path("settings.ini"), repr=False)
@@ -124,6 +131,7 @@ class AppSettings:
         qs.setValue("font_size", self.font_size)
         qs.setValue("neon_color", self.neon_color)
         qs.setValue("neon_intensity", self.neon_intensity)
+        qs.setValue("neon_width", self.neon_width)
         qs.setValue("chapter_template", self.chapter_template)
         qs.sync()
         self._file = file_path
@@ -159,6 +167,7 @@ class AppSettings:
             font_size=qs.value("font_size", 10, int),
             neon_color=qs.value("neon_color", styles.ACCENT_COLOR, str),
             neon_intensity=qs.value("neon_intensity", 20, int),
+            neon_width=qs.value("neon_width", 10, int),
             chapter_template=qs.value("chapter_template", "глава {n}", str),
         )
         obj._file = file_path
@@ -337,11 +346,16 @@ class SettingsDialog(QtWidgets.QDialog):
         self.neon_intensity_slider.setRange(1, 50)
         self.neon_intensity_slider.setValue(settings.neon_intensity)
 
+        self.neon_width_spin = QtWidgets.QSpinBox()
+        self.neon_width_spin.setRange(1, 50)
+        self.neon_width_spin.setValue(settings.neon_width)
+
         self.neon_preview = QtWidgets.QFrame()
         self.neon_preview.setFixedSize(40, 20)
         self.neon_preview.setFrameShape(QtWidgets.QFrame.Shape.Box)
         self.neon_color_slider.valueChanged.connect(self._update_neon_preview)
         self.neon_intensity_slider.valueChanged.connect(self._update_neon_preview)
+        self.neon_width_spin.valueChanged.connect(self._update_neon_preview)
         self._update_neon_preview()
 
         layout.addRow("Папка оригинала", orig_layout)
@@ -373,6 +387,7 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addRow("Цвет подсветки", self.color_btn)
         layout.addRow("Цвет свечения", self.neon_color_slider)
         layout.addRow("Интенсивность свечения", self.neon_intensity_slider)
+        layout.addRow("Ширина свечения", self.neon_width_spin)
         layout.addRow("Предпросмотр свечения", self.neon_preview)
         layout.addRow("Шаблон главы", self.chapter_template_edit)
 
@@ -513,7 +528,7 @@ class SettingsDialog(QtWidgets.QDialog):
             min(255, self.neon_intensity_slider.value() * 5),
         )
         self.neon_preview.setStyleSheet(
-            f"background-color: {color.name()}"
+            f"background-color: {color.name()}; border: {self.neon_width_spin.value()}px solid {color.name()}"
         )
 
     def _update_color_btn(self) -> None:
@@ -565,6 +580,7 @@ class SettingsDialog(QtWidgets.QDialog):
         )
         self.settings.neon_color = neon.name()
         self.settings.neon_intensity = self.neon_intensity_slider.value()
+        self.settings.neon_width = self.neon_width_spin.value()
         self.settings.font_size = self.font_size_spin.value()
         self.settings.chapter_template = self.chapter_template_edit.text()
         styles.init(self.settings)

@@ -31,37 +31,40 @@ QTextEdit:hover,
 QLineEdit:focus,
 QLineEdit:hover,
 QTableWidget#glossary:focus,
-QTableWidget#glossary:hover {{
+QTableWidget#glossary:hover,
+QPushButton:focus,
+QPushButton:hover {{
     border: 1px solid {color};
 }}
 """.strip()
 
 
-def neon_glow_rule(color: str, intensity: int) -> str:
+def neon_glow_rule(color: str, intensity: int, width: int) -> str:
     """Return a QSS snippet that highlights widgets on focus/hover.
 
     Qt's style engine does not support the CSS ``box-shadow`` property.
-    Instead we approximate a glow effect by increasing the border thickness
-    relative to *intensity*. This avoids runtime warnings about unknown
-    properties while still providing visual feedback.
+    Instead we approximate a glow effect by increasing the border thickness.
 
     Parameters
     ----------
     color:
         Hex representation of the glow colour.
     intensity:
-        Desired glow intensity; mapped to border width.
+        Desired glow intensity (reserved for future use).
+    width:
+        Border width for the glow effect.
     """
 
-    border_width = max(1, intensity // 2)
     return f"""
 QTextEdit:focus,
 QTextEdit:hover,
 QLineEdit:focus,
 QLineEdit:hover,
 QTableWidget#glossary:focus,
-QTableWidget#glossary:hover {{
-    border: {border_width}px solid {color};
+QTableWidget#glossary:hover,
+QPushButton:focus,
+QPushButton:hover {{
+    border: {width}px solid {color};
 }}
 """.strip()
 
