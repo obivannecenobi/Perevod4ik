@@ -1,6 +1,7 @@
 import importlib
 import subprocess
 import sys
+import traceback
 
 REQUIRED_PACKAGES = {
     "PyQt6": "PyQt6",
@@ -17,5 +18,9 @@ def ensure_packages() -> None:
 
 if __name__ == "__main__":
     ensure_packages()
-    from app.main import main
-    main()
+    try:
+        from app.main import main
+        main()
+    except Exception:
+        traceback.print_exc()
+        sys.exit(1)
