@@ -260,7 +260,7 @@ class Ui_MainWindow(object):
         self.main_layout.addLayout(self.status_layout)
 
         # Fonts
-        base_font = QtGui.QFont(styles.INTER_FONT, 10)
+        base_font = QtGui.QFont(styles.INTER_FONT, self.settings.font_size)
         self.original_edit.setFont(base_font)
         self.translation_edit.setFont(base_font)
         self.mini_prompt_edit.setFont(base_font)
@@ -322,6 +322,13 @@ class Ui_MainWindow(object):
         {glow_rule}
         """
         self.centralwidget.setStyleSheet(style_sheet)
+
+    def _apply_font_size(self) -> None:
+        base_font = QtGui.QFont(styles.INTER_FONT, self.settings.font_size)
+        self.original_edit.setFont(base_font)
+        self.translation_edit.setFont(base_font)
+        self.mini_prompt_edit.setFont(base_font)
+        self.glossary_table.setFont(base_font)
 
     # --- internal helpers -------------------------------------------------
     def _update_timer(self) -> None:
@@ -440,6 +447,7 @@ class Ui_MainWindow(object):
                 self._disable_machine_check()
             self.diff_highlighter.set_color(self.settings.highlight_color)
             self._apply_style()
+            self._apply_font_size()
 
     def _restore_prev(self) -> None:
         text = self.version_manager.undo()

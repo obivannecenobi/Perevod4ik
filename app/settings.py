@@ -60,6 +60,8 @@ class AppSettings:
         Accent colour for focused elements.
     text_color:
         Default text colour for widgets.
+    font_size:
+        Base font size for text areas and tables.
     chapter_template:
         Template for naming saved chapters. Use "{n}" as a placeholder for the
         chapter number.
@@ -88,6 +90,7 @@ class AppSettings:
     text_color: str = styles.TEXT_COLOR
     neon_color: str = styles.ACCENT_COLOR
     neon_intensity: int = 20
+    font_size: int = 10
     chapter_template: str = "глава {n}"
     _file: Path = field(default=Path("settings.ini"), repr=False)
 
@@ -118,6 +121,7 @@ class AppSettings:
         qs.setValue("app_background", self.app_background)
         qs.setValue("accent_color", self.accent_color)
         qs.setValue("text_color", self.text_color)
+        qs.setValue("font_size", self.font_size)
         qs.setValue("neon_color", self.neon_color)
         qs.setValue("neon_intensity", self.neon_intensity)
         qs.setValue("chapter_template", self.chapter_template)
@@ -152,6 +156,7 @@ class AppSettings:
             app_background=qs.value("app_background", styles.APP_BACKGROUND, str),
             accent_color=qs.value("accent_color", styles.ACCENT_COLOR, str),
             text_color=qs.value("text_color", styles.TEXT_COLOR, str),
+            font_size=qs.value("font_size", 10, int),
             neon_color=qs.value("neon_color", styles.ACCENT_COLOR, str),
             neon_intensity=qs.value("neon_intensity", 20, int),
             chapter_template=qs.value("chapter_template", "глава {n}", str),
@@ -360,6 +365,11 @@ class SettingsDialog(QtWidgets.QDialog):
         text_layout.addWidget(self.text_color_edit)
         text_layout.addWidget(self.text_color_btn)
         layout.addRow("Цвет текста", text_layout)
+
+        self.font_size_spin = QtWidgets.QSpinBox()
+        self.font_size_spin.setRange(6, 48)
+        self.font_size_spin.setValue(settings.font_size)
+        layout.addRow("Размер шрифта", self.font_size_spin)
         layout.addRow("Цвет подсветки", self.color_btn)
         layout.addRow("Цвет свечения", self.neon_color_slider)
         layout.addRow("Интенсивность свечения", self.neon_intensity_slider)
@@ -555,6 +565,7 @@ class SettingsDialog(QtWidgets.QDialog):
         )
         self.settings.neon_color = neon.name()
         self.settings.neon_intensity = self.neon_intensity_slider.value()
+        self.settings.font_size = self.font_size_spin.value()
         self.settings.chapter_template = self.chapter_template_edit.text()
         styles.init(self.settings)
         self.settings.save()
