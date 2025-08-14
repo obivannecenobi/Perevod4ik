@@ -86,9 +86,9 @@ class Ui_MainWindow(object):
         self.nav_layout.addWidget(self.save_btn)
         self.main_layout.addLayout(self.nav_layout)
 
-        # Splitter separating original and translation/glossary
+        # Splitter separating original and translation
         self.h_splitter = QtWidgets.QSplitter(
-            QtCore.Qt.Orientation.Horizontal, parent=self.centralwidget
+            QtCore.Qt.Horizontal, parent=self.centralwidget
         )
         self.main_layout.addWidget(self.h_splitter)
 
@@ -104,13 +104,8 @@ class Ui_MainWindow(object):
         self.original_layout.addWidget(self.original_label)
         self.original_layout.addWidget(self.original_edit)
         self.original_layout.addWidget(self.original_counter)
+        self.original_layout.setStretch(1, 1)
         self.h_splitter.addWidget(self.original_widget)
-
-        # Right splitter dividing translation/prompt and glossary
-        self.right_splitter = QtWidgets.QSplitter(
-            QtCore.Qt.Orientation.Vertical, parent=self.centralwidget
-        )
-        self.h_splitter.addWidget(self.right_splitter)
 
         # Translation block with mini-prompt
         self.translation_widget = QtWidgets.QWidget()
@@ -140,7 +135,10 @@ class Ui_MainWindow(object):
         self.translation_layout.addLayout(self.version_layout)
         self.translation_layout.addWidget(self.mini_prompt_label)
         self.translation_layout.addWidget(self.mini_prompt_edit)
-        self.right_splitter.addWidget(self.translation_widget)
+        self.translation_layout.setStretch(1, 1)
+        self.h_splitter.addWidget(self.translation_widget)
+        self.h_splitter.setStretchFactor(0, 1)
+        self.h_splitter.setStretchFactor(1, 1)
 
         # Setup diff highlighting for translation edits
         self.diff_highlighter = DiffHighlighter(
@@ -199,7 +197,7 @@ class Ui_MainWindow(object):
         self.glossary_layout.addWidget(self.auto_prompt_checkbox)
         self.glossary_layout.addWidget(self.glossary_table)
         self.glossary_layout.addLayout(self.pair_btn_layout)
-        self.right_splitter.addWidget(self.glossary_widget)
+        self.main_layout.addWidget(self.glossary_widget)
 
         self.glossary_combo.currentIndexChanged.connect(self._on_glossary_selected)
         self.add_glossary_btn.clicked.connect(self._create_glossary)
