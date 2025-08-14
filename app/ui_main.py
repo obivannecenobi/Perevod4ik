@@ -150,7 +150,22 @@ class Ui_MainWindow(object):
         self.h_splitter.setStretchFactor(0, 1)
         self.h_splitter.setStretchFactor(1, 1)
 
-        # Mini-prompt will be inserted after the main splitter
+        # Mini-prompt section placed below the text editors
+        self.mini_prompt_widget = QtWidgets.QWidget(parent=self.centralwidget)
+        self.mini_prompt_layout = QtWidgets.QVBoxLayout(self.mini_prompt_widget)
+        self.mini_prompt_layout.setContentsMargins(0, 0, 0, 0)
+        self.mini_prompt_layout.setSpacing(4)
+        self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
+        self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
+
+        # Vertical splitter combining editor area and mini-prompt
+        self.v_splitter = QtWidgets.QSplitter(
+            QtCore.Qt.Orientation.Vertical, parent=self.centralwidget
+        )
+        self.v_splitter.addWidget(self.h_splitter)
+        self.v_splitter.addWidget(self.mini_prompt_widget)
+        self.v_splitter.setStretchFactor(0, 1)
+        self.v_splitter.setStretchFactor(1, 0)
 
         # Setup diff highlighting for translation edits
         self.diff_highlighter = DiffHighlighter(
@@ -220,21 +235,11 @@ class Ui_MainWindow(object):
         self.main_splitter = QtWidgets.QSplitter(
             QtCore.Qt.Orientation.Horizontal, parent=self.centralwidget
         )
-        self.main_splitter.addWidget(self.h_splitter)
+        self.main_splitter.addWidget(self.v_splitter)
         self.main_splitter.addWidget(self.glossary_widget)
         self.main_layout.addWidget(self.main_splitter)
+        self.main_layout.setStretch(1, 1)
         self._splitter_sizes = self.main_splitter.sizes()
-
-        # Mini-prompt section below the splitter
-        self.mini_prompt_widget = QtWidgets.QWidget(parent=self.centralwidget)
-        self.mini_prompt_layout = QtWidgets.QVBoxLayout(self.mini_prompt_widget)
-        self.mini_prompt_layout.setContentsMargins(0, 0, 0, 0)
-        self.mini_prompt_layout.setSpacing(4)
-        self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
-        self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
-        index = self.main_layout.indexOf(self.main_splitter)
-        self.main_layout.insertWidget(index + 1, self.mini_prompt_widget)
-        self.main_layout.setStretch(index, 1)
 
         self.glossary_combo.currentIndexChanged.connect(self._on_glossary_selected)
         self.add_glossary_btn.clicked.connect(self._create_glossary)
