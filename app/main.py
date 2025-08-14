@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from queue import Queue
 from typing import Tuple
+
+# Qt 6 no longer ships default fonts. Ensure the application has a font
+# directory available so that the GUI doesn't hang on startup when
+# QFontDatabase tries to locate fonts. We bundle fonts under ``app/fonts``
+# and point ``QT_QPA_FONTDIR`` there before importing any Qt modules.
+os.environ.setdefault("QT_QPA_FONTDIR", str(Path(__file__).resolve().parent / "fonts"))
 
 from PyQt6 import QtGui, QtWidgets
 
