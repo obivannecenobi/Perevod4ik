@@ -617,9 +617,11 @@ class Ui_MainWindow(object):
             self.current_glossary.save()
         self.glossary_table.removeRow(row)
 
-    def _on_pair_edited(self, row: int, column: int) -> None:
+    def _on_pair_edited(self, item: QtWidgets.QTableWidgetItem) -> None:
         if not self.current_glossary:
             return
+        row = item.row()
+        column = item.column()
         src_item = self.glossary_table.item(row, 0)
         dst_item = self.glossary_table.item(row, 1)
         if src_item and dst_item:
