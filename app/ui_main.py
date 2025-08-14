@@ -272,6 +272,7 @@ class Ui_MainWindow(object):
         self.timer = QtCore.QTimer(MainWindow)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self._update_timer)
+        self._start_timer()
 
         self.original_edit.textChanged.connect(self._update_original_counter)
         self.translation_edit.textChanged.connect(self._update_translation_counter)
@@ -341,7 +342,6 @@ class Ui_MainWindow(object):
         self.timer_label.setText("00:00:00")
 
     def _update_original_counter(self) -> None:
-        self._start_timer()
         self.original_counter.setText(str(len(self.original_edit.toPlainText())))
 
     def _update_translation_counter(self) -> None:
@@ -349,7 +349,6 @@ class Ui_MainWindow(object):
             return
         self._updating_translation = True
         try:
-            self._start_timer()
             text = self.translation_edit.toPlainText()
             with QtCore.QSignalBlocker(self.translation_edit):
                 self.translation_counter.setText(str(len(text)))
