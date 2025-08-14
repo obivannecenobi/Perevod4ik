@@ -9,7 +9,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QIcon
 
 from . import styles
-from . import __version__
+from . import get_version
 from .services.versioning import VersionManager
 from .services.morphology import MorphologyService, MorphologyHighlighter
 from .services.glossary import (
@@ -37,7 +37,8 @@ def resource_path(name: str) -> str:
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, settings: AppSettings | None = None):
-        print(f"Application version: {__version__}")
+        version = get_version()
+        print(f"Application version: {version}")
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
 
@@ -258,7 +259,7 @@ class Ui_MainWindow(object):
         self.status_layout.setContentsMargins(0, 0, 0, 0)
         self.status_layout.setSpacing(4)
         self.status_layout.addStretch()
-        self.version_label = QtWidgets.QLabel(__version__, parent=self.centralwidget)
+        self.version_label = QtWidgets.QLabel(version, parent=self.centralwidget)
         self.version_label.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
         self.status_layout.addWidget(self.version_label)
         self.timer_label = QtWidgets.QLabel("00:00:00", parent=self.centralwidget)
