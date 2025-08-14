@@ -55,9 +55,12 @@ class Ui_MainWindow(object):
 
         # Menu bar
         self.menu_bar = MainWindow.menuBar()
+        self.menu_bar.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
         self.settings_menu = self.menu_bar.addMenu("")
+        self.settings_menu.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
         self.settings_action = QtGui.QAction(parent=MainWindow)
         self.settings_action.setIcon(QIcon(resource_path("настройки.png")))
+        self.settings_action.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
         self.settings_menu.addAction(self.settings_action)
         self.settings_action.triggered.connect(self._open_settings)
 
@@ -140,6 +143,7 @@ class Ui_MainWindow(object):
         self.mini_prompt_widget = QtWidgets.QWidget(parent=self.centralwidget)
         self.mini_prompt_layout = QtWidgets.QVBoxLayout(self.mini_prompt_widget)
         self.mini_prompt_label = QtWidgets.QLabel(parent=self.mini_prompt_widget)
+        self.mini_prompt_label.setFont(QtGui.QFont(styles.HEADER_FONT, 14))
         self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
         self.mini_prompt_layout.addWidget(self.mini_prompt_label)
         self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
@@ -221,8 +225,10 @@ class Ui_MainWindow(object):
         self.status_layout = QtWidgets.QHBoxLayout()
         self.status_layout.addStretch()
         self.version_label = QtWidgets.QLabel(__version__, parent=self.centralwidget)
+        self.version_label.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
         self.status_layout.addWidget(self.version_label)
         self.timer_label = QtWidgets.QLabel("00:00:00", parent=self.centralwidget)
+        self.timer_label.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
         self.status_layout.addWidget(self.timer_label)
         self.main_layout.addLayout(self.status_layout)
 
@@ -232,8 +238,6 @@ class Ui_MainWindow(object):
         self.translation_edit.setFont(base_font)
         self.mini_prompt_edit.setFont(base_font)
         self.glossary_table.setFont(base_font)
-        self.timer_label.setFont(base_font)
-        self.version_label.setFont(base_font)
         self._apply_style()
 
         # Timer and character counters
