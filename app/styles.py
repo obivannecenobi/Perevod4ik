@@ -87,5 +87,7 @@ def init(settings: Any | None = None) -> None:
         INTER_FONT = family
 
     # Register the Cattedrale font for headers
-    if family := _register_font("Cattedrale[RUSbypenka220]-Regular.ttf"):
-        HEADER_FONT = family
+    family = _register_font("Cattedrale[RUSbypenka220]-Regular.ttf")
+    if not family:
+        raise RuntimeError("Failed to load Cattedrale[RUSbypenka220]-Regular.ttf")
+    HEADER_FONT = family
