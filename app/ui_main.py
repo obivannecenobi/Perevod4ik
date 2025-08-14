@@ -52,6 +52,8 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.main_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(4)
 
         # Menu bar
         self.menu_bar = MainWindow.menuBar()
@@ -66,9 +68,13 @@ class Ui_MainWindow(object):
 
         # Navigation bar
         self.nav_layout = QtWidgets.QHBoxLayout()
+        self.nav_layout.setContentsMargins(0, 0, 0, 0)
+        self.nav_layout.setSpacing(4)
         self.prev_btn = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.prev_btn.setFixedSize(24, 24)
         self.chapter_combo = QtWidgets.QComboBox(parent=self.centralwidget)
         self.next_btn = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.next_btn.setFixedSize(24, 24)
         self.model_combo = QtWidgets.QComboBox(parent=self.centralwidget)
         models = [
             name
@@ -82,6 +88,7 @@ class Ui_MainWindow(object):
                 self.model_combo.setCurrentIndex(idx)
         self.save_btn = QtWidgets.QPushButton(parent=self.centralwidget)
         self.save_btn.setIcon(QIcon(resource_path("сохранить.png")))
+        self.save_btn.setFixedSize(24, 24)
         self.nav_layout.addWidget(self.prev_btn)
         self.nav_layout.addWidget(self.chapter_combo)
         self.nav_layout.addWidget(self.next_btn)
@@ -98,6 +105,8 @@ class Ui_MainWindow(object):
         # Original text section
         self.original_widget = QtWidgets.QWidget()
         self.original_layout = QtWidgets.QVBoxLayout(self.original_widget)
+        self.original_layout.setContentsMargins(0, 0, 0, 0)
+        self.original_layout.setSpacing(4)
         self.original_label = QtWidgets.QLabel(parent=self.original_widget)
         self.original_label.setFont(QtGui.QFont(styles.HEADER_FONT, 14))
         self.original_edit = QtWidgets.QTextEdit(parent=self.original_widget)
@@ -113,6 +122,8 @@ class Ui_MainWindow(object):
         # Translation block with mini-prompt
         self.translation_widget = QtWidgets.QWidget()
         self.translation_layout = QtWidgets.QVBoxLayout(self.translation_widget)
+        self.translation_layout.setContentsMargins(0, 0, 0, 0)
+        self.translation_layout.setSpacing(4)
         self.translation_label = QtWidgets.QLabel(parent=self.translation_widget)
         self.translation_label.setFont(QtGui.QFont(styles.HEADER_FONT, 14))
         self.translation_edit = QtWidgets.QTextEdit(parent=self.translation_widget)
@@ -126,8 +137,12 @@ class Ui_MainWindow(object):
         self.translation_counter.setObjectName("counter")
         self.translation_counter.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         self.version_layout = QtWidgets.QHBoxLayout()
+        self.version_layout.setContentsMargins(0, 0, 0, 0)
+        self.version_layout.setSpacing(4)
         self.undo_btn = QtWidgets.QPushButton(parent=self.translation_widget)
+        self.undo_btn.setFixedSize(24, 24)
         self.redo_btn = QtWidgets.QPushButton(parent=self.translation_widget)
+        self.redo_btn.setFixedSize(24, 24)
         self.version_layout.addWidget(self.undo_btn)
         self.version_layout.addWidget(self.redo_btn)
         self.translation_layout.addWidget(self.translation_label)
@@ -142,6 +157,8 @@ class Ui_MainWindow(object):
         # Mini-prompt section below the splitter
         self.mini_prompt_widget = QtWidgets.QWidget(parent=self.centralwidget)
         self.mini_prompt_layout = QtWidgets.QVBoxLayout(self.mini_prompt_widget)
+        self.mini_prompt_layout.setContentsMargins(0, 0, 0, 0)
+        self.mini_prompt_layout.setSpacing(4)
         self.mini_prompt_label = QtWidgets.QLabel(parent=self.mini_prompt_widget)
         self.mini_prompt_label.setFont(QtGui.QFont(styles.HEADER_FONT, 14))
         self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
@@ -180,11 +197,17 @@ class Ui_MainWindow(object):
         # Glossary panel
         self.glossary_widget = QtWidgets.QWidget(parent=self.centralwidget)
         self.glossary_layout = QtWidgets.QVBoxLayout(self.glossary_widget)
+        self.glossary_layout.setContentsMargins(0, 0, 0, 0)
+        self.glossary_layout.setSpacing(4)
         self.glossary_top = QtWidgets.QHBoxLayout()
+        self.glossary_top.setContentsMargins(0, 0, 0, 0)
+        self.glossary_top.setSpacing(4)
         self.glossary_combo = QtWidgets.QComboBox(parent=self.glossary_widget)
         self.add_glossary_btn = QtWidgets.QPushButton("+", parent=self.glossary_widget)
+        self.add_glossary_btn.setFixedSize(24, 24)
         self.rename_glossary_btn = QtWidgets.QPushButton("Rename", parent=self.glossary_widget)
         self.delete_glossary_btn = QtWidgets.QPushButton("-", parent=self.glossary_widget)
+        self.delete_glossary_btn.setFixedSize(24, 24)
         self.import_glossary_btn = QtWidgets.QPushButton("Import", parent=self.glossary_widget)
         self.export_glossary_btn = QtWidgets.QPushButton("Export", parent=self.glossary_widget)
         self.glossary_top.addWidget(self.glossary_combo)
@@ -200,6 +223,8 @@ class Ui_MainWindow(object):
         self.glossary_table.horizontalHeader().setStretchLastSection(True)
         self.glossary_table.setObjectName("glossary")
         self.pair_btn_layout = QtWidgets.QHBoxLayout()
+        self.pair_btn_layout.setContentsMargins(0, 0, 0, 0)
+        self.pair_btn_layout.setSpacing(4)
         self.add_pair_btn = QtWidgets.QPushButton("Add", parent=self.glossary_widget)
         self.remove_pair_btn = QtWidgets.QPushButton("Remove", parent=self.glossary_widget)
         self.pair_btn_layout.addWidget(self.add_pair_btn)
@@ -223,6 +248,8 @@ class Ui_MainWindow(object):
 
         # Status/timer area
         self.status_layout = QtWidgets.QHBoxLayout()
+        self.status_layout.setContentsMargins(0, 0, 0, 0)
+        self.status_layout.setSpacing(4)
         self.status_layout.addStretch()
         self.version_label = QtWidgets.QLabel(__version__, parent=self.centralwidget)
         self.version_label.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
@@ -283,6 +310,10 @@ class Ui_MainWindow(object):
         QLabel#counter {{
             color: rgba(255, 255, 255, 128);
             font-size: 10px;
+        }}
+        QPushButton {{
+            padding: 2px 6px;
+            min-height: 20px;
         }}
         {focus_rule}
         {glow_rule}
