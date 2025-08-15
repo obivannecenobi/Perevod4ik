@@ -26,6 +26,7 @@ from .services.files import (
     save_docx,
     save_txt,
 )
+from .services.project import ProjectManager
 from .services.cloud import list_documents, load_document
 from .services.reports import save_csv, save_html
 from .services.versioning import check_for_updates, pull_updates
@@ -44,6 +45,11 @@ class MainController:
         self.chapters: list[Path | Tuple[str, str]] = []
         self.worker: ModelWorker | None = None
         self.batch_queue: Queue[Path] | None = None
+        self.project_manager = ProjectManager()
+        project_id = (
+            Path(self.settings.translation_path or self.settings.original_path or "project").stem
+        )
+        self.project = self.project_manager.load(project_id, title=project_id)
         base = Path(
             self.settings.translation_path
             or self.settings.original_path
@@ -155,6 +161,9 @@ class MainController:
         self.ui.original_edit.setPlainText(text)
         self.ui.translation_edit.clear()
         self.ui.reset_timer()
+        context = self.project_manager.overview(self.project, index)
+        if context:
+            self.ui.mini_prompt_edit.setPlaceholderText(context)
 
     def prev_chapter(self) -> None:
         idx = self.ui.chapter_combo.currentIndex()
@@ -258,6 +267,7 @@ class MainController:
             base = src.with_name(name)
         out_path = base.with_suffix(".docx")
         save_docx(result, out_path)
+        self.project_manager.add_chapter(self.project, name, result)
         self._process_queue()
 
     def _on_batch_translation_error(self, exc: Exception) -> None:
@@ -299,6 +309,7 @@ class MainController:
             save_func(text, out_path)
         stat = {"chapter": name, "characters": len(text), "time": self.ui.elapsed}
         self.stats = append_stat(stat, self.stats_path)
+        self.project_manager.add_chapter(self.project, name, text)
         self.ui.reset_timer()
         if self.settings.auto_next:
             self.next_chapter()
