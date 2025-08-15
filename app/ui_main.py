@@ -291,7 +291,11 @@ class Ui_MainWindow(object):
         self._start_timer()
 
         self.original_edit.textChanged.connect(self._update_original_counter)
-        self.translation_edit.textChanged.connect(self._update_translation_counter)
+        self.translation_timer = QtCore.QTimer()
+        self.translation_timer.setInterval(500)
+        self.translation_timer.setSingleShot(True)
+        self.translation_timer.timeout.connect(self._commit_translation_change)
+        self.translation_edit.textChanged.connect(self._on_translation_changed)
         self.translation_edit.cursorPositionChanged.connect(
             self._on_cursor_position_changed
         )
@@ -369,21 +373,25 @@ class Ui_MainWindow(object):
     def _update_original_counter(self) -> None:
         self.original_counter.setText(str(len(self.original_edit.toPlainText())))
 
-    def _update_translation_counter(self) -> None:
+    def _on_translation_changed(self) -> None:
         if self._updating_translation:
             return
         self._updating_translation = True
         try:
+            self.translation_timer.start()
             text = self.translation_edit.toPlainText()
-            with QtCore.QSignalBlocker(self.translation_edit):
-                self.translation_counter.setText(str(len(text)))
-                if not self.original_translation:
-                    self.original_translation = text
-                    self.diff_highlighter.set_base(text)
-                self.version_manager.add_version(text)
-                self.diff_highlighter.update_diff()
+            self.translation_counter.setText(str(len(text)))
         finally:
             self._updating_translation = False
+
+    def _commit_translation_change(self) -> None:
+        self.translation_timer.stop()
+        text = self.translation_edit.toPlainText()
+        if not self.original_translation:
+            self.original_translation = text
+            self.diff_highlighter.set_base(text)
+        self.version_manager.add_version(text)
+        self.diff_highlighter.update_diff()
 
     def _on_cursor_position_changed(self) -> None:
         cursor = self.translation_edit.textCursor()
