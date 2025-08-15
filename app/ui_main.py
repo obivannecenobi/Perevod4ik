@@ -21,6 +21,7 @@ from .services.glossary import (
     import_csv,
     export_csv,
 )
+from .glossary import GlossaryTableModel
 from .settings import AppSettings, SettingsDialog
 from .services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
 from .models import fetch_synonyms_llm, _MODELS
@@ -216,11 +217,11 @@ class Ui_MainWindow(object):
         self.glossary_top.addWidget(self.import_glossary_btn)
         self.glossary_top.addWidget(self.export_glossary_btn)
         self.auto_prompt_checkbox = QtWidgets.QCheckBox(parent=self.glossary_widget)
-        self.glossary_table = QtWidgets.QTableWidget(parent=self.glossary_widget)
-        self.glossary_table.setColumnCount(2)
-        self.glossary_table.setHorizontalHeaderLabels(["Source", "Target"])
-        self.glossary_table.horizontalHeader().setStretchLastSection(True)
+        self.glossary_table = QtWidgets.QTableView(parent=self.glossary_widget)
         self.glossary_table.setObjectName("glossary")
+        self.glossary_model = GlossaryTableModel()
+        self.glossary_table.setModel(self.glossary_model)
+        self.glossary_table.horizontalHeader().setStretchLastSection(True)
         self.pair_btn_layout = QtWidgets.QHBoxLayout()
         self.pair_btn_layout.setContentsMargins(0, 0, 0, 0)
         self.pair_btn_layout.setSpacing(4)
@@ -250,7 +251,6 @@ class Ui_MainWindow(object):
         self.export_glossary_btn.clicked.connect(self._export_glossary)
         self.add_pair_btn.clicked.connect(self._add_pair)
         self.remove_pair_btn.clicked.connect(self._remove_pair)
-        self.glossary_table.itemChanged.connect(self._on_pair_edited)
         self.auto_prompt_checkbox.toggled.connect(self._on_auto_prompt_toggled)
         self.toggle_glossary_btn.toggled.connect(self._toggle_glossary)
 
@@ -315,7 +315,7 @@ class Ui_MainWindow(object):
             border: 1px solid transparent;
             border-radius: 6px;
         }}
-        QTableWidget#glossary {{
+        QTableView#glossary {{
             background-color: {styles.GLOSSARY_BACKGROUND};
             border: 1px solid transparent;
             border-radius: 6px;
@@ -489,12 +489,7 @@ class Ui_MainWindow(object):
 
     # --- glossary management ---------------------------------------------
     def _load_glossaries(self) -> None:
-        base = Path(
-            self.settings.translation_path
-            or self.settings.original_path
-            or "."
-        )
-        folder = base / "glossaries"
+        folder = Path(__file__).resolve().parent.parent / "data"
         folder.mkdir(parents=True, exist_ok=True)
         self._glossary_folder = folder
         self.glossary_combo.blockSignals(True)
@@ -508,11 +503,10 @@ class Ui_MainWindow(object):
             if current:
                 self._load_glossary(Path(current))
         else:
-            self.current_glossary = None
-            self.glossary_table.setRowCount(0)
-            self.auto_prompt_checkbox.blockSignals(True)
-            self.auto_prompt_checkbox.setChecked(False)
-            self.auto_prompt_checkbox.blockSignals(False)
+            glossary = create_glossary("glossary", folder)
+            self.glossary_combo.addItem(glossary.name, glossary.file)
+            self.glossary_combo.setCurrentIndex(0)
+            self._load_glossary(glossary.file)
 
     def _load_glossary(self, path: Path) -> None:
         self.current_glossary = Glossary.load(path)
@@ -522,15 +516,7 @@ class Ui_MainWindow(object):
         self._populate_table()
 
     def _populate_table(self) -> None:
-        self.glossary_table.blockSignals(True)
-        self.glossary_table.setRowCount(0)
-        if self.current_glossary:
-            for src, dst in self.current_glossary.entries.items():
-                row = self.glossary_table.rowCount()
-                self.glossary_table.insertRow(row)
-                self.glossary_table.setItem(row, 0, QtWidgets.QTableWidgetItem(src))
-                self.glossary_table.setItem(row, 1, QtWidgets.QTableWidgetItem(dst))
-        self.glossary_table.blockSignals(False)
+        self.glossary_model.set_glossary(self.current_glossary)
 
     def _on_glossary_selected(self, index: int) -> None:
         path = self.glossary_combo.itemData(index)
@@ -577,7 +563,7 @@ class Ui_MainWindow(object):
             self.glossary_combo.setCurrentIndex(0)
         else:
             self.current_glossary = None
-            self.glossary_table.setRowCount(0)
+            self.glossary_model.set_glossary(None)
             self.auto_prompt_checkbox.blockSignals(True)
             self.auto_prompt_checkbox.setChecked(False)
             self.auto_prompt_checkbox.blockSignals(False)
@@ -608,34 +594,14 @@ class Ui_MainWindow(object):
         export_csv(self.current_glossary, path)
 
     def _add_pair(self) -> None:
-        row = self.glossary_table.rowCount()
-        self.glossary_table.insertRow(row)
-        self.glossary_table.setItem(row, 0, QtWidgets.QTableWidgetItem(""))
-        self.glossary_table.setItem(row, 1, QtWidgets.QTableWidgetItem(""))
+        self.glossary_model.add_pair()
 
     def _remove_pair(self) -> None:
-        row = self.glossary_table.currentRow()
+        row = self.glossary_table.currentIndex().row()
         if row < 0:
             return
-        src_item = self.glossary_table.item(row, 0)
-        if src_item and self.current_glossary:
-            self.current_glossary.remove(src_item.text())
-            self.current_glossary.save()
-        self.glossary_table.removeRow(row)
+        self.glossary_model.remove_pair(row)
 
-    def _on_pair_edited(self, item: QtWidgets.QTableWidgetItem) -> None:
-        if not self.current_glossary:
-            return
-        row = item.row()
-        column = item.column()
-        src_item = self.glossary_table.item(row, 0)
-        dst_item = self.glossary_table.item(row, 1)
-        if src_item and dst_item:
-            src = src_item.text().strip()
-            dst = dst_item.text().strip()
-            if src:
-                self.current_glossary.add(src, dst)
-                self.current_glossary.save()
 
     def _on_auto_prompt_toggled(self, checked: bool) -> None:
         if self.current_glossary:
@@ -643,9 +609,7 @@ class Ui_MainWindow(object):
             self.current_glossary.save()
 
     def glossary_entries(self) -> dict[str, str]:
-        if self.current_glossary:
-            return dict(self.current_glossary.entries)
-        return {}
+        return self.glossary_model.glossary_entries()
 
     # --- translations -----------------------------------------------------
     def retranslateUi(self, MainWindow):
