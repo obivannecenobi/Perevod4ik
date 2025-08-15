@@ -57,6 +57,14 @@ class Ui_MainWindow(object):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(4)
 
+        # Project list and icon selection
+        self.project_list = QtWidgets.QListWidget(parent=self.centralwidget)
+        self.project_list.setIconSize(QtCore.QSize(32, 32))
+        self.main_layout.addWidget(self.project_list)
+
+        self.project_icon_btn = QtWidgets.QPushButton("Выбрать иконку", parent=self.centralwidget)
+        self.main_layout.addWidget(self.project_icon_btn)
+
         # Menu bar
         self.menu_bar = MainWindow.menuBar()
         self.menu_bar.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
