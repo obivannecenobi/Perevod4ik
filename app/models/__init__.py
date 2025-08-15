@@ -36,7 +36,10 @@ def get_translator(name: str, settings: AppSettings | None = None):
 
     settings = settings or AppSettings.load()
     key = getattr(settings, f"{name.lower()}_key", "")
-    return cls(api_key=key)
+    try:
+        return cls(api_key=key, settings=settings)
+    except TypeError:
+        return cls(api_key=key)
 
 
 def fetch_synonyms_llm(word: str, model_name: str) -> list[str]:
