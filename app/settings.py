@@ -224,9 +224,18 @@ class SettingsDialog(QtWidgets.QDialog):
         trans_layout.addWidget(self.translation_edit)
         trans_layout.addWidget(trans_btn)
 
-        self.use_proxy_box = QtWidgets.QCheckBox()
+        self.use_proxy_box = QtWidgets.QCheckBox(
+            "Использовать прокси", objectName="use_proxy"
+        )
         self.use_proxy_box.setChecked(settings.use_proxy)
-        self.proxy_url_edit = QtWidgets.QLineEdit(settings.proxy_url)
+        self.use_proxy_box.toggled.connect(self._on_proxy_toggle)
+
+        self.proxy_url_edit = QtWidgets.QLineEdit(
+            settings.proxy_url, objectName="proxy_url"
+        )
+        self.proxy_check_btn = QtWidgets.QPushButton("Проверить")
+        self.proxy_check_btn.clicked.connect(self._test_proxy)
+        self._on_proxy_toggle(self.use_proxy_box.isChecked())
 
         self.gemini_key_edit = QtWidgets.QLineEdit(settings.gemini_key)
         self.deepl_key_edit = QtWidgets.QLineEdit(settings.deepl_key)
@@ -374,8 +383,11 @@ class SettingsDialog(QtWidgets.QDialog):
 
         layout.addRow("Папка оригинала", orig_layout)
         layout.addRow("Папка перевода", trans_layout)
-        layout.addRow("Использовать прокси", self.use_proxy_box)
-        layout.addRow("URL прокси", self.proxy_url_edit)
+        layout.addRow(self.use_proxy_box)
+        proxy_layout = QtWidgets.QHBoxLayout()
+        proxy_layout.addWidget(self.proxy_url_edit)
+        proxy_layout.addWidget(self.proxy_check_btn)
+        layout.addRow("URL прокси", proxy_layout)
         layout.addRow("Токен Google Docs", self.gdoc_token_edit)
         layout.addRow("ID папки Google Docs", self.gdoc_folder_edit)
         layout.addRow("Модель", self.model_combo)
@@ -536,6 +548,31 @@ class SettingsDialog(QtWidgets.QDialog):
         if color.isValid():
             edit.setText(color.name())
             btn.setStyleSheet(f"background-color: {color.name()}")
+
+    def _on_proxy_toggle(self, checked: bool) -> None:
+        self.proxy_url_edit.setEnabled(checked)
+        self.proxy_check_btn.setEnabled(checked)
+
+    def _test_proxy(self) -> None:
+        import requests
+
+        url = self.proxy_url_edit.text().strip()
+        if not url:
+            QtWidgets.QMessageBox.warning(
+                self, "Проверка прокси", "Укажите URL прокси"
+            )
+            return
+        proxies = {"http": url, "https": url}
+        try:
+            requests.get("https://httpbin.org/get", proxies=proxies, timeout=5)
+        except Exception as exc:  # pragma: no cover - network error message
+            QtWidgets.QMessageBox.critical(
+                self, "Проверка прокси", f"Не удалось подключиться: {exc}"
+            )
+        else:  # pragma: no cover - network success message
+            QtWidgets.QMessageBox.information(
+                self, "Проверка прокси", "Прокси работает"
+            )
 
     def _update_neon_preview(self) -> None:
         color = QtGui.QColor.fromHsv(
