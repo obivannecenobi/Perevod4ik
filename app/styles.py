@@ -42,8 +42,9 @@ QPushButton:hover {{
 def neon_glow_rule(color: str, intensity: int, width: int) -> str:
     """Return a QSS snippet that highlights widgets on focus/hover.
 
-    Qt's style engine does not support the CSS ``box-shadow`` property.
-    Instead we approximate a glow effect by increasing the border thickness.
+    Qt's style engine lacks native drop-shadow effects.  A simple way to
+    provide a visual highlight is to increase the border thickness, which
+    we use here to emulate a glow.
 
     Parameters
     ----------
