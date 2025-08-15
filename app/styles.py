@@ -30,8 +30,8 @@ QTextEdit:focus,
 QTextEdit:hover,
 QLineEdit:focus,
 QLineEdit:hover,
-QTableWidget#glossary:focus,
-QTableWidget#glossary:hover,
+QTableView#glossary:focus,
+QTableView#glossary:hover,
 QPushButton:focus,
 QPushButton:hover {{
     border: 1px solid {color};
@@ -60,8 +60,8 @@ QTextEdit:focus,
 QTextEdit:hover,
 QLineEdit:focus,
 QLineEdit:hover,
-QTableWidget#glossary:focus,
-QTableWidget#glossary:hover,
+QTableView#glossary:focus,
+QTableView#glossary:hover,
 QPushButton:focus,
 QPushButton:hover {{
     border: {width}px solid {color};
