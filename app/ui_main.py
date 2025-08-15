@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QStandardItem, QStandardItemModel
 
 from . import styles
 from . import get_version
@@ -26,6 +26,7 @@ from .settings import AppSettings, SettingsDialog
 from .services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
 from .models import fetch_synonyms_llm, _MODELS
 from .diff_utils import DiffHighlighter
+from .project_manager import Project, ProjectManager
 
 def resource_path(name: str) -> str:
     """Return absolute path to resource, compatible with PyInstaller."""
@@ -56,6 +57,42 @@ class Ui_MainWindow(object):
         self.main_layout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(4)
+
+        # Project tree dock
+        self.project_manager = ProjectManager()
+        self.project_dock = QtWidgets.QDockWidget(parent=MainWindow)
+        self.project_widget = QtWidgets.QWidget()
+        self.project_layout = QtWidgets.QVBoxLayout(self.project_widget)
+        self.project_tree = QtWidgets.QTreeView(parent=self.project_widget)
+        self.project_model = QStandardItemModel()
+        self.project_model.setHorizontalHeaderLabels(["Projects"])
+        self.active_root = QStandardItem()
+        self.archived_root = QStandardItem()
+        self.project_model.appendRow(self.active_root)
+        self.project_model.appendRow(self.archived_root)
+        self.project_tree.setModel(self.project_model)
+        self.project_tree.expandAll()
+        self.project_layout.addWidget(self.project_tree)
+        self.project_btn_layout = QtWidgets.QHBoxLayout()
+        self.create_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
+        self.rename_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
+        self.archive_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
+        self.delete_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
+        self.project_btn_layout.addWidget(self.create_project_btn)
+        self.project_btn_layout.addWidget(self.rename_project_btn)
+        self.project_btn_layout.addWidget(self.archive_project_btn)
+        self.project_btn_layout.addWidget(self.delete_project_btn)
+        self.project_layout.addLayout(self.project_btn_layout)
+        self.project_dock.setWidget(self.project_widget)
+        MainWindow.addDockWidget(
+            QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.project_dock
+        )
+
+        self.create_project_btn.clicked.connect(self._create_project)
+        self.rename_project_btn.clicked.connect(self._rename_project)
+        self.archive_project_btn.clicked.connect(self._archive_project)
+        self.delete_project_btn.clicked.connect(self._delete_project)
+        self._refresh_project_tree()
 
         # Project list and icon selection
         self.project_list = QtWidgets.QListWidget(parent=self.centralwidget)
@@ -618,6 +655,71 @@ class Ui_MainWindow(object):
             return
         self.glossary_model.remove_pair(row)
 
+    # --- project management ---------------------------------------------
+    def _selected_project(self) -> Project | None:
+        index = self.project_tree.currentIndex()
+        if not index.isValid():
+            return None
+        item = self.project_model.itemFromIndex(index)
+        if item in (self.active_root, self.archived_root):
+            return None
+        project_id = item.data(QtCore.Qt.ItemDataRole.UserRole)
+        return self.project_manager.get(project_id)
+
+    def _refresh_project_tree(self) -> None:
+        self.active_root.removeRows(0, self.active_root.rowCount())
+        self.archived_root.removeRows(0, self.archived_root.rowCount())
+        for proj in self.project_manager.projects:
+            item = QStandardItem(proj.name)
+            item.setData(proj.id, QtCore.Qt.ItemDataRole.UserRole)
+            if proj.archived:
+                self.archived_root.appendRow(item)
+            else:
+                self.active_root.appendRow(item)
+        self.project_tree.expandAll()
+
+    def _create_project(self) -> None:
+        name, ok = QtWidgets.QInputDialog.getText(
+            self.project_widget, "Новый проект", "Название проекта:"
+        )
+        if not ok or not name:
+            return
+        self.project_manager.create(name)
+        self._refresh_project_tree()
+
+    def _rename_project(self) -> None:
+        proj = self._selected_project()
+        if not proj:
+            return
+        name, ok = QtWidgets.QInputDialog.getText(
+            self.project_widget, "Переименовать", "Новое название:", text=proj.name
+        )
+        if not ok or not name:
+            return
+        self.project_manager.rename(proj.id, name)
+        self._refresh_project_tree()
+
+    def _archive_project(self) -> None:
+        proj = self._selected_project()
+        if not proj:
+            return
+        self.project_manager.archive(proj.id, not proj.archived)
+        self._refresh_project_tree()
+
+    def _delete_project(self) -> None:
+        proj = self._selected_project()
+        if not proj:
+            return
+        res = QtWidgets.QMessageBox.question(
+            self.project_widget,
+            "Удалить проект",
+            f"Удалить '{proj.name}'?",
+        )
+        if res != QtWidgets.QMessageBox.StandardButton.Yes:
+            return
+        self.project_manager.delete(proj.id)
+        self._refresh_project_tree()
+
 
     def _on_auto_prompt_toggled(self, checked: bool) -> None:
         if self.current_glossary:
@@ -649,4 +751,11 @@ class Ui_MainWindow(object):
         self.auto_prompt_checkbox.setText(_translate("MainWindow", "Авто в промпт"))
         self.add_pair_btn.setText(_translate("MainWindow", "Добавить"))
         self.remove_pair_btn.setText(_translate("MainWindow", "Удалить"))
+        self.project_dock.setWindowTitle(_translate("MainWindow", "Проекты"))
+        self.create_project_btn.setText(_translate("MainWindow", "Создать"))
+        self.rename_project_btn.setText(_translate("MainWindow", "Переименовать"))
+        self.archive_project_btn.setText(_translate("MainWindow", "Архивировать"))
+        self.delete_project_btn.setText(_translate("MainWindow", "Удалить"))
+        self.active_root.setText(_translate("MainWindow", "Активные"))
+        self.archived_root.setText(_translate("MainWindow", "Архив"))
 
