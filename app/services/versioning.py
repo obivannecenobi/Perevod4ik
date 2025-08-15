@@ -32,14 +32,12 @@ class VersionManager:
         del self.versions[self.index + 1 :]
         self.versions.append({"timestamp": datetime.utcnow().isoformat(), "text": text})
         self.index = len(self.versions) - 1
-        save_versions(self.versions, self.path)
 
     def undo(self) -> str | None:
         """Step back in history and return the previous text."""
 
         if self.index > 0:
             self.index -= 1
-            save_versions(self.versions, self.path)
             return self.versions[self.index]["text"]
         return None
 
@@ -48,9 +46,12 @@ class VersionManager:
 
         if self.index < len(self.versions) - 1:
             self.index += 1
-            save_versions(self.versions, self.path)
             return self.versions[self.index]["text"]
         return None
+
+    def flush(self) -> None:
+        """Persist the current version history to disk."""
+        save_versions(self.versions, self.path)
 
 
 def check_for_updates(repo_path: Path) -> bool:

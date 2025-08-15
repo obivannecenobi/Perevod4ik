@@ -356,6 +356,7 @@ class MainController:
         self.stats = append_stat(stat, self.stats_path)
         self.project_manager.add_chapter(self.project, name, text)
         self.ui.reset_timer()
+        self.ui.version_manager.flush()
         if self.settings.auto_next:
             self.next_chapter()
 
@@ -399,6 +400,7 @@ def main() -> None:
     ui.setupUi(window, settings)
     controller = MainController(window, ui, settings)
     app.aboutToQuit.connect(settings.save)
+    app.aboutToQuit.connect(ui.version_manager.flush)
     window.show()
     sys.exit(app.exec())
 
