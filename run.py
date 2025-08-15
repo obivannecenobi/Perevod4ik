@@ -1,4 +1,5 @@
 import importlib
+import os
 import subprocess
 import sys
 import traceback
@@ -17,6 +18,10 @@ def ensure_packages() -> None:
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 if __name__ == "__main__":
+    if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+        print(
+            "GUI не будет показан, удалите QT_QPA_PLATFORM или установите в windows"
+        )
     ensure_packages()
     try:
         from app.main import main
