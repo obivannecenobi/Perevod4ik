@@ -17,12 +17,22 @@ def ensure_packages() -> None:
         except Exception:
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
+
+def configure_qt_platform() -> None:
+    """Configure Qt backend based on environment and system platform."""
+    platform = os.environ.get("QT_QPA_PLATFORM")
+    if platform == "offscreen":
+        del os.environ["QT_QPA_PLATFORM"]
+        platform = None
+        print("Предупреждение: QT_QPA_PLATFORM=offscreen удалён.")
+    if platform is None:
+        platform = "windows" if sys.platform.startswith("win") else "xcb"
+        os.environ["QT_QPA_PLATFORM"] = platform
+        print(f"Предупреждение: выбран бэкенд '{platform}'.")
+
 if __name__ == "__main__":
-    if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
-        print(
-            "GUI не будет показан, удалите QT_QPA_PLATFORM или установите в windows"
-        )
     ensure_packages()
+    configure_qt_platform()
     try:
         from app.main import main
         main()
