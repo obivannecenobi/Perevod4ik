@@ -71,6 +71,10 @@ class AppSettings:
     chapter_template:
         Template for naming saved chapters. Use "{n}" as a placeholder for the
         chapter number.
+    use_proxy:
+        Whether to route network traffic through a proxy.
+    proxy_url:
+        URL of the proxy server.
     """
 
     original_path: str = ""
@@ -99,6 +103,8 @@ class AppSettings:
     neon_width: int = 10
     font_size: int = 10
     chapter_template: str = "глава {n}"
+    use_proxy: bool = False
+    proxy_url: str = ""
     _file: Path = field(default=Path("settings.ini"), repr=False)
 
     # --- persistence -------------------------------------------------
@@ -124,6 +130,8 @@ class AppSettings:
         qs.setValue("format", self.format)
         qs.setValue("gdoc_token", self.gdoc_token)
         qs.setValue("gdoc_folder_id", self.gdoc_folder_id)
+        qs.setValue("use_proxy", self.use_proxy)
+        qs.setValue("proxy_url", self.proxy_url)
         qs.setValue("highlight_color", self.highlight_color)
         qs.setValue("app_background", self.app_background)
         qs.setValue("accent_color", self.accent_color)
@@ -160,6 +168,8 @@ class AppSettings:
             format=qs.value("format", "docx", str),
             gdoc_token=qs.value("gdoc_token", "", str),
             gdoc_folder_id=qs.value("gdoc_folder_id", "", str),
+            use_proxy=qs.value("use_proxy", False, bool),
+            proxy_url=qs.value("proxy_url", "", str),
             highlight_color=qs.value("highlight_color", "#80ffff00", str),
             app_background=qs.value("app_background", styles.APP_BACKGROUND, str),
             accent_color=qs.value("accent_color", styles.ACCENT_COLOR, str),
@@ -213,6 +223,10 @@ class SettingsDialog(QtWidgets.QDialog):
         trans_btn.clicked.connect(lambda: self._choose_folder(self.translation_edit))
         trans_layout.addWidget(self.translation_edit)
         trans_layout.addWidget(trans_btn)
+
+        self.use_proxy_box = QtWidgets.QCheckBox()
+        self.use_proxy_box.setChecked(settings.use_proxy)
+        self.proxy_url_edit = QtWidgets.QLineEdit(settings.proxy_url)
 
         self.gemini_key_edit = QtWidgets.QLineEdit(settings.gemini_key)
         self.deepl_key_edit = QtWidgets.QLineEdit(settings.deepl_key)
@@ -360,6 +374,8 @@ class SettingsDialog(QtWidgets.QDialog):
 
         layout.addRow("Папка оригинала", orig_layout)
         layout.addRow("Папка перевода", trans_layout)
+        layout.addRow("Использовать прокси", self.use_proxy_box)
+        layout.addRow("URL прокси", self.proxy_url_edit)
         layout.addRow("Токен Google Docs", self.gdoc_token_edit)
         layout.addRow("ID папки Google Docs", self.gdoc_folder_edit)
         layout.addRow("Модель", self.model_combo)
@@ -477,7 +493,7 @@ class SettingsDialog(QtWidgets.QDialog):
             if name == "gemini":
                 from .models.gemini import GeminiTranslator
 
-                GeminiTranslator(key).translate("ping")
+                GeminiTranslator(key, settings=self.settings).translate("ping")
             elif name == "deepl":
                 from .models.deepl import DeepLTranslator
 
@@ -562,6 +578,8 @@ class SettingsDialog(QtWidgets.QDialog):
         )
         self.settings.gdoc_token = self.gdoc_token_edit.text()
         self.settings.gdoc_folder_id = self.gdoc_folder_edit.text()
+        self.settings.use_proxy = self.use_proxy_box.isChecked()
+        self.settings.proxy_url = self.proxy_url_edit.text()
         self.settings.model = self.model_combo.currentText()
         self.settings.synonym_provider = self.synonym_combo.currentText()
         self.settings.machine_check = self.machine_check_box.isChecked()
