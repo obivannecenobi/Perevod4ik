@@ -12,6 +12,7 @@ class Project:
     id: str
     name: str
     archived: bool = False
+    icon_path: str = "assets/empty_project.png"
 
 
 class ProjectManager:

@@ -71,6 +71,7 @@ class Ui_MainWindow(object):
         self.project_model.appendRow(self.active_root)
         self.project_model.appendRow(self.archived_root)
         self.project_tree.setModel(self.project_model)
+        self.project_tree.setIconSize(QtCore.QSize(32, 32))
         self.project_tree.expandAll()
         self.project_layout.addWidget(self.project_tree)
         self.project_btn_layout = QtWidgets.QHBoxLayout()
@@ -78,10 +79,12 @@ class Ui_MainWindow(object):
         self.rename_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
         self.archive_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
         self.delete_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
+        self.select_icon_btn = QtWidgets.QPushButton(parent=self.project_widget)
         self.project_btn_layout.addWidget(self.create_project_btn)
         self.project_btn_layout.addWidget(self.rename_project_btn)
         self.project_btn_layout.addWidget(self.archive_project_btn)
         self.project_btn_layout.addWidget(self.delete_project_btn)
+        self.project_btn_layout.addWidget(self.select_icon_btn)
         self.project_layout.addLayout(self.project_btn_layout)
         self.project_dock.setWidget(self.project_widget)
         MainWindow.addDockWidget(
@@ -92,6 +95,7 @@ class Ui_MainWindow(object):
         self.rename_project_btn.clicked.connect(self._rename_project)
         self.archive_project_btn.clicked.connect(self._archive_project)
         self.delete_project_btn.clicked.connect(self._delete_project)
+        self.select_icon_btn.clicked.connect(self._choose_project_icon)
         self._refresh_project_tree()
 
         # Project list and icon selection
@@ -672,6 +676,16 @@ class Ui_MainWindow(object):
         for proj in self.project_manager.projects:
             item = QStandardItem(proj.name)
             item.setData(proj.id, QtCore.Qt.ItemDataRole.UserRole)
+            pixmap = QtGui.QPixmap(proj.icon_path)
+            if pixmap.isNull():
+                pixmap = QtGui.QPixmap("assets/empty_project.png")
+            pixmap = pixmap.scaled(
+                32,
+                32,
+                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                QtCore.Qt.TransformationMode.SmoothTransformation,
+            )
+            item.setIcon(QtGui.QIcon(pixmap))
             if proj.archived:
                 self.archived_root.appendRow(item)
             else:
@@ -720,6 +734,31 @@ class Ui_MainWindow(object):
         self.project_manager.delete(proj.id)
         self._refresh_project_tree()
 
+    def _choose_project_icon(self) -> None:
+        proj = self._selected_project()
+        if not proj:
+            return
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self.project_widget,
+            "Выбор иконки",
+            "",
+            "Images (*.png *.jpg *.bmp *.gif)",
+        )
+        if not path:
+            return
+        pixmap = QtGui.QPixmap(path)
+        if pixmap.isNull():
+            return
+        pixmap = pixmap.scaled(
+            32,
+            32,
+            QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+            QtCore.Qt.TransformationMode.SmoothTransformation,
+        )
+        proj.icon_path = path
+        self.project_manager.save()
+        self._refresh_project_tree()
+
 
     def _on_auto_prompt_toggled(self, checked: bool) -> None:
         if self.current_glossary:
@@ -756,6 +795,7 @@ class Ui_MainWindow(object):
         self.rename_project_btn.setText(_translate("MainWindow", "Переименовать"))
         self.archive_project_btn.setText(_translate("MainWindow", "Архивировать"))
         self.delete_project_btn.setText(_translate("MainWindow", "Удалить"))
+        self.select_icon_btn.setText(_translate("MainWindow", "Иконка"))
         self.active_root.setText(_translate("MainWindow", "Активные"))
         self.archived_root.setText(_translate("MainWindow", "Архив"))
 
