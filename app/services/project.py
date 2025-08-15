@@ -16,6 +16,7 @@ class Project:
 
     id: str
     title: str
+    icon_path: str = "assets/empty_project.png"
     chapters: list[dict] = field(default_factory=list)
 
 
@@ -54,6 +55,7 @@ class ProjectManager:
         if path.exists():
             with path.open("r", encoding="utf-8") as fh:
                 data = json.load(fh)
+            data.setdefault("icon_path", "assets/empty_project.png")
             return Project(**data)
         return Project(id=project_id, title=title or project_id)
 
