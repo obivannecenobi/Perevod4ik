@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
+
+from .default_icon import ensure_empty_project_icon
 
 
 @dataclass
@@ -19,6 +21,7 @@ class ProjectManager:
     """Manage :class:`Project` instances persisted to JSON."""
 
     def __init__(self, path: str | Path = Path("data/projects.json")) -> None:
+        ensure_empty_project_icon()
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.projects: list[Project] = []
