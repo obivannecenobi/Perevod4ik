@@ -134,12 +134,12 @@ class Ui_MainWindow(object):
 
         # Menu bar
         self.menu_bar = MainWindow.menuBar()
-        self.menu_bar.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
+        self.menu_bar.setFont(QtGui.QFont(self.settings.header_font, 10))
         self.settings_menu = self.menu_bar.addMenu("")
-        self.settings_menu.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
+        self.settings_menu.setFont(QtGui.QFont(self.settings.header_font, 10))
         self.settings_action = QtGui.QAction(parent=MainWindow)
         self.settings_action.setIcon(QIcon(resource_path("настройки.png")))
-        self.settings_action.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
+        self.settings_action.setFont(QtGui.QFont(self.settings.header_font, 10))
         self.settings_menu.addAction(self.settings_action)
         self.settings_action.triggered.connect(self._open_settings)
 
@@ -337,17 +337,17 @@ class Ui_MainWindow(object):
         self.status_layout.setSpacing(4)
         self.status_layout.addStretch()
         self.version_label = QtWidgets.QLabel(__version__, parent=self.centralwidget)
-        self.version_label.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
+        self.version_label.setFont(QtGui.QFont(self.settings.header_font, 10))
         self.status_layout.addWidget(self.version_label)
         self.timer_label = QtWidgets.QLabel("00:00:00", parent=self.centralwidget)
-        self.timer_label.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
+        self.timer_label.setFont(QtGui.QFont(self.settings.header_font, 10))
         self.status_layout.addWidget(self.timer_label)
         self.main_layout.addLayout(self.status_layout)
         self.main_layout.setStretch(3, 1)  # splitter fills remaining space
         self.main_layout.setStretch(4, 0)  # status bar keeps minimal height
 
         # Fonts
-        base_font = QtGui.QFont(styles.INTER_FONT, self.settings.font_size)
+        base_font = QtGui.QFont(self.settings.base_font, self.settings.font_size)
         self.original_edit.setFont(base_font)
         self.translation_edit.setFont(base_font)
         self.mini_prompt_edit.setFont(base_font)
@@ -386,7 +386,7 @@ class Ui_MainWindow(object):
         QWidget {{
             background-color: {self.settings.app_background};
             color: {self.settings.text_color};
-            font-family: {styles.INTER_FONT};
+            font-family: {self.settings.base_font};
         }}
         QTextEdit,
         QLineEdit {{
@@ -416,11 +416,17 @@ class Ui_MainWindow(object):
         self.centralwidget.setStyleSheet(style_sheet)
 
     def _apply_font_size(self) -> None:
-        base_font = QtGui.QFont(styles.INTER_FONT, self.settings.font_size)
+        base_font = QtGui.QFont(self.settings.base_font, self.settings.font_size)
         self.original_edit.setFont(base_font)
         self.translation_edit.setFont(base_font)
         self.mini_prompt_edit.setFont(base_font)
         self.glossary_table.setFont(base_font)
+        header_font = QtGui.QFont(self.settings.header_font, 10)
+        self.menu_bar.setFont(header_font)
+        self.settings_menu.setFont(header_font)
+        self.settings_action.setFont(header_font)
+        self.version_label.setFont(header_font)
+        self.timer_label.setFont(header_font)
 
     # --- internal helpers -------------------------------------------------
     def _update_timer(self) -> None:

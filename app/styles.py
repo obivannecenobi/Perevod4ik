@@ -86,17 +86,18 @@ def init(settings: Any | None = None) -> None:
 
     global APP_BACKGROUND, ACCENT_COLOR, TEXT_COLOR, INTER_FONT, HEADER_FONT
 
+    # Register bundled fonts so they are available in font pickers
+    if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
+        INTER_FONT = family
+
+    header_family = _register_font("Cattedrale[RUSbypenka220]-Regular.ttf")
+    if not header_family:
+        raise RuntimeError("Failed to load Cattedrale[RUSbypenka220]-Regular.ttf")
+    HEADER_FONT = header_family
+
     if settings is not None:
         APP_BACKGROUND = getattr(settings, "app_background", APP_BACKGROUND)
         ACCENT_COLOR = getattr(settings, "accent_color", ACCENT_COLOR)
         TEXT_COLOR = getattr(settings, "text_color", TEXT_COLOR)
-
-    # Register the Inter font for main text
-    if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
-        INTER_FONT = family
-
-    # Register the Cattedrale font for headers
-    family = _register_font("Cattedrale[RUSbypenka220]-Regular.ttf")
-    if not family:
-        raise RuntimeError("Failed to load Cattedrale[RUSbypenka220]-Regular.ttf")
-    HEADER_FONT = family
+        INTER_FONT = getattr(settings, "base_font", INTER_FONT)
+        HEADER_FONT = getattr(settings, "header_font", HEADER_FONT)
