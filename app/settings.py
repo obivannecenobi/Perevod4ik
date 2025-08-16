@@ -22,6 +22,8 @@ class AppSettings:
         Folder containing original chapters.
     translation_path:
         Folder where translated chapters and metadata are stored.
+    projects_dir:
+        Root directory for storing project metadata and lists.
     gemini_key:
         API key for the Gemini model.
     deepl_key:
@@ -83,6 +85,7 @@ class AppSettings:
 
     original_path: str = ""
     translation_path: str = ""
+    projects_dir: str = "data"
     gemini_key: str = ""
     deepl_key: str = ""
     grok_key: str = ""
@@ -121,6 +124,7 @@ class AppSettings:
         qs = QtCore.QSettings(str(file_path), QtCore.QSettings.Format.IniFormat)
         qs.setValue("original_path", self.original_path)
         qs.setValue("translation_path", self.translation_path)
+        qs.setValue("projects_dir", self.projects_dir)
         qs.setValue("gemini_key", self.gemini_key)
         qs.setValue("deepl_key", self.deepl_key)
         qs.setValue("grok_key", self.grok_key)
@@ -161,6 +165,7 @@ class AppSettings:
         obj = cls(
             original_path=qs.value("original_path", "", str),
             translation_path=qs.value("translation_path", "", str),
+            projects_dir=qs.value("projects_dir", "data", str),
             gemini_key=qs.value("gemini_key", "", str),
             deepl_key=qs.value("deepl_key", "", str),
             grok_key=qs.value("grok_key", "", str),
@@ -233,6 +238,14 @@ class SettingsDialog(QtWidgets.QDialog):
         trans_btn.clicked.connect(lambda: self._choose_folder(self.translation_edit))
         trans_layout.addWidget(self.translation_edit)
         trans_layout.addWidget(trans_btn)
+
+        # Projects folder selector
+        projects_layout = QtWidgets.QHBoxLayout()
+        self.projects_edit = QtWidgets.QLineEdit(settings.projects_dir)
+        projects_btn = QtWidgets.QPushButton("...")
+        projects_btn.clicked.connect(lambda: self._choose_folder(self.projects_edit))
+        projects_layout.addWidget(self.projects_edit)
+        projects_layout.addWidget(projects_btn)
 
         self.use_proxy_box = QtWidgets.QCheckBox(
             "Использовать прокси", objectName="use_proxy"
@@ -394,6 +407,7 @@ class SettingsDialog(QtWidgets.QDialog):
 
         layout.addRow("Папка оригинала", orig_layout)
         layout.addRow("Папка перевода", trans_layout)
+        layout.addRow("Папка проектов", projects_layout)
         layout.addRow(self.use_proxy_box)
         proxy_layout = QtWidgets.QHBoxLayout()
         proxy_layout.addWidget(self.proxy_url_edit)
@@ -612,6 +626,7 @@ class SettingsDialog(QtWidgets.QDialog):
     def accept(self) -> None:  # type: ignore[override]
         self.settings.original_path = self.original_edit.text()
         self.settings.translation_path = self.translation_edit.text()
+        self.settings.projects_dir = self.projects_edit.text()
         self.settings.gemini_key = self.gemini_key_edit.text()
         self.settings.deepl_key = self.deepl_key_edit.text()
         self.settings.grok_key = self.grok_key_edit.text()

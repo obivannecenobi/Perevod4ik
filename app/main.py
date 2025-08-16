@@ -49,7 +49,7 @@ class MainController:
         self.chapters: list[Path | Tuple[str, str]] = []
         self.worker: ModelWorker | None = None
         self.batch_queue: Queue[Path] | None = None
-        self.project_manager = ProjectManager()
+        self.project_manager = ProjectManager(Path(self.settings.projects_dir) / "projects")
         project_id = (
             Path(self.settings.translation_path or self.settings.original_path or "project").stem
         )

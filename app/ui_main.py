@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import shutil
 from pathlib import Path
 
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -56,8 +57,8 @@ class Ui_MainWindow(object):
         self.main_layout.setSpacing(4)
 
         # Project tree dock
-        self.project_manager = ProjectManager()
-        self.project_service = ProjectDataManager()
+        self.project_manager = ProjectManager(self.settings.projects_dir)
+        self.project_service = ProjectDataManager(Path(self.settings.projects_dir) / "projects")
         self.project_dock = QtWidgets.QDockWidget(parent=MainWindow)
         self.project_widget = QtWidgets.QWidget()
         self.project_layout = QtWidgets.QVBoxLayout(self.project_widget)
@@ -525,9 +526,12 @@ class Ui_MainWindow(object):
 
     def _open_settings(self) -> None:
         previous = self.settings.machine_check
+        prev_dir = self.settings.projects_dir
         dialog = SettingsDialog(self.settings, self.centralwidget)
         result = dialog.exec()
         if result == QtWidgets.QDialog.DialogCode.Accepted:
+            if self.settings.projects_dir != prev_dir:
+                self._migrate_project_dir(prev_dir, self.settings.projects_dir)
             if self.settings.machine_check and not previous:
                 self._enable_machine_check()
             elif not self.settings.machine_check and previous:
@@ -535,6 +539,23 @@ class Ui_MainWindow(object):
             self.diff_highlighter.set_color(self.settings.highlight_color)
             self._apply_style()
             self._apply_font_size()
+
+    def _migrate_project_dir(self, old: str, new: str) -> None:
+        old_path = Path(old) if old else Path()
+        new_path = Path(new)
+        new_path.mkdir(parents=True, exist_ok=True)
+        old_json = old_path / "projects.json"
+        new_json = new_path / "projects.json"
+        if old_json.exists() and not new_json.exists():
+            shutil.move(str(old_json), str(new_json))
+        old_projects = old_path / "projects"
+        new_projects = new_path / "projects"
+        new_projects.mkdir(parents=True, exist_ok=True)
+        if old_projects.exists() and not any(new_projects.iterdir()):
+            shutil.move(str(old_projects), str(new_projects))
+        self.project_manager = ProjectManager(new_path)
+        self.project_service = ProjectDataManager(new_projects)
+        self._refresh_project_tree()
 
     def _restore_prev(self) -> None:
         text = self.version_manager.undo()

@@ -20,10 +20,11 @@ class Project:
 class ProjectManager:
     """Manage :class:`Project` instances persisted to JSON."""
 
-    def __init__(self, path: str | Path = Path("data/projects.json")) -> None:
+    def __init__(self, root: str | Path = Path("data")) -> None:
         ensure_empty_project_icon()
-        self.path = Path(path)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.root = Path(root)
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.path = self.root / "projects.json"
         self.projects: list[Project] = []
         self.load()
 
