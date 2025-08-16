@@ -701,10 +701,10 @@ class Ui_MainWindow(object):
         self.glossary_model.remove_pair(row)
 
     def _on_pair_edited(self, item: QtWidgets.QTableWidgetItem):
-        row = item.row()
-        column = item.column()
         if not self.current_glossary:
             return
+        row = item.row()
+        column = item.column()
         src_item = self.glossary_table.item(row, 0)
         dst_item = self.glossary_table.item(row, 1)
         if src_item and dst_item:
