@@ -90,7 +90,31 @@ translator = get_translator(settings.model, settings)
 Все используемые шрифты и графические элементы хранятся в корне репозитория:
 - Шрифты: `Cattedrale[RUSbypenka220]-Regular.ttf`, `Inter-VariableFont_opsz,wght.ttf`.
 - Иконки и изображения: `сохранить.png`, `настройки.png`, `лого.jpg`, `лого 1.jpg`, `лого 2.png`.
- 
+
+## Стиль и подсветка
+
+Интерфейс оформляется через QSS: элементам задаются скругления 6 px и базовые отступы, что обеспечивает аккуратное размещение виджетов. Основной текст набран шрифтом `Inter`, а заголовки используют декоративный `Cattedrale`.
+
+При фокусе или наведении поля получают неоновую рамку. Её ширину (`neon_width`) и яркость (`neon_intensity`) можно настроить в Settings.
+
+Пример правил из [`app/styles.py`](app/styles.py):
+
+```python
+# app/styles.py
+INTER_FONT = "Inter"
+HEADER_FONT = "Cattedrale"
+
+def neon_glow_rule(color: str, intensity: int, width: int) -> str:
+    return f"""
+QTextEdit:focus,
+QTextEdit:hover,
+QLineEdit:focus,
+QLineEdit:hover {{
+    border: {width}px solid {color};
+}}
+""".strip()
+```
+
 ## Настройки
 В диалоге настроек можно выбрать цвет и интенсивность неонового свечения активных полей.
 Также можно задать прокси-сервер, если прямой доступ к сервисам ограничен.
