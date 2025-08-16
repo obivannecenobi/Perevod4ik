@@ -9,7 +9,7 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QIcon, QStandardItem, QStandardItemModel
 
-from . import __version__, styles
+from . import styles, __version__
 from .services.versioning import VersionManager
 from .services.morphology import MorphologyService, MorphologyHighlighter
 from .services.glossary import (
@@ -332,6 +332,7 @@ class Ui_MainWindow(object):
         self.status_layout.setContentsMargins(0, 0, 0, 0)
         self.status_layout.setSpacing(4)
         self.status_layout.addStretch()
+        # Display application version retrieved from ``app.__version__``
         self.version_label = QtWidgets.QLabel(__version__, parent=self.centralwidget)
         self.version_label.setFont(QtGui.QFont(self.settings.header_font, 10))
         self.status_layout.addWidget(self.version_label)
