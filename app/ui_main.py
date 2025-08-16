@@ -689,6 +689,20 @@ class Ui_MainWindow(object):
             return
         self.glossary_model.remove_pair(row)
 
+    def _on_pair_edited(self, item: QtWidgets.QTableWidgetItem) -> None:
+        if not self.current_glossary:
+            return
+        row = item.row()
+        column = item.column()
+        src_item = self.glossary_table.item(row, 0)
+        dst_item = self.glossary_table.item(row, 1)
+        if src_item and dst_item:
+            src = src_item.text().strip()
+            dst = dst_item.text().strip()
+            if src:
+                self.current_glossary.add(src, dst)
+                self.current_glossary.save()
+
     # --- project management ---------------------------------------------
     def _selected_project(self) -> Project | None:
         index = self.project_tree.currentIndex()
