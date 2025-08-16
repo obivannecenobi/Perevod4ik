@@ -379,7 +379,7 @@ class Ui_MainWindow(object):
         glow_rule = styles.neon_glow_rule(
             self.settings.neon_color,
             self.settings.neon_intensity,
-            self.settings.neon_width,
+            self.settings.neon_width,  # configurable border width
         )
         focus_rule = styles.focus_hover_rule(self.settings.accent_color)
         style_sheet = f"""
