@@ -414,6 +414,8 @@ class Ui_MainWindow(object):
         QPushButton {{
             padding: 2px 6px;
             min-height: 20px;
+            border: 1px solid transparent;
+            border-radius: 6px;
         }}
         {focus_rule}
         {glow_rule}
