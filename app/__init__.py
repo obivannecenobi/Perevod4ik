@@ -6,12 +6,11 @@ import subprocess
 
 
 def get_version() -> str:
-    """Return application version based on merge commit count."""
-    base = 1.1
-    merges = int(
-        subprocess.check_output(["git", "rev-list", "--count", "--merges", "HEAD"])
-    )
-    return f"{base + merges * 0.1:.1f}"
+    """Return application version ``0.1.<commit_count>``."""
+    commit_count = subprocess.check_output(
+        ["git", "rev-list", "--count", "HEAD"], text=True
+    ).strip()
+    return f"0.1.{commit_count}"
 
 
 __version__ = get_version()
