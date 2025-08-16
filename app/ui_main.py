@@ -192,6 +192,7 @@ class Ui_MainWindow(object):
         self.original_layout.setContentsMargins(0, 0, 0, 0)
         self.original_layout.setSpacing(4)
         self.original_edit = QtWidgets.QTextEdit(parent=self.original_widget)
+        self.original_edit.setPlaceholderText("Оригинал")
         self.original_counter = QtWidgets.QLabel("0", parent=self.original_widget)
         self.original_counter.setObjectName("counter")
         self.original_counter.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
@@ -206,6 +207,7 @@ class Ui_MainWindow(object):
         self.translation_layout.setContentsMargins(0, 0, 0, 0)
         self.translation_layout.setSpacing(4)
         self.translation_edit = QtWidgets.QTextEdit(parent=self.translation_widget)
+        self.translation_edit.setPlaceholderText("Перевод")
         self.translation_edit.setContextMenuPolicy(
             QtCore.Qt.ContextMenuPolicy.CustomContextMenu
         )
@@ -237,6 +239,7 @@ class Ui_MainWindow(object):
         self.mini_prompt_layout.setContentsMargins(0, 0, 0, 0)
         self.mini_prompt_layout.setSpacing(4)
         self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
+        self.mini_prompt_edit.setPlaceholderText("Мини-промпт")
         self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
 
         # Vertical splitter combining editor area and mini-prompt
@@ -831,11 +834,8 @@ class Ui_MainWindow(object):
         self.prev_btn.setText(_translate("MainWindow", "⦉"))
         self.next_btn.setText(_translate("MainWindow", "⦊"))
         self.save_btn.setText(_translate("MainWindow", "Сохранить"))
-        self.original_edit.setPlaceholderText(_translate("MainWindow", "Оригинал"))
-        self.translation_edit.setPlaceholderText(_translate("MainWindow", "Перевод"))
         self.undo_btn.setText(_translate("MainWindow", "Назад"))
         self.redo_btn.setText(_translate("MainWindow", "Вперёд"))
-        self.mini_prompt_edit.setPlaceholderText(_translate("MainWindow", "Мини-промпт"))
         self.settings_menu.setTitle(_translate("MainWindow", "Настройки"))
         self.settings_action.setText(_translate("MainWindow", "Параметры…"))
         self.add_glossary_btn.setText(_translate("MainWindow", "Создать"))
