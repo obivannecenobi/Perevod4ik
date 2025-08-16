@@ -528,15 +528,15 @@ class SettingsDialog(QtWidgets.QDialog):
             elif name == "deepl":
                 from .models.deepl import DeepLTranslator
 
-                DeepLTranslator(key).translate("ping")
+                DeepLTranslator(key, settings=self.settings).translate("ping")
             elif name == "grok":
                 from .models.grok import GrokTranslator
 
-                GrokTranslator(key).translate("ping")
+                GrokTranslator(key, settings=self.settings).translate("ping")
             elif name == "qwen":
                 from .models.qwen import QwenTranslator
 
-                QwenTranslator(key).translate("ping")
+                QwenTranslator(key, settings=self.settings).translate("ping")
             success = True
         except Exception:
             success = False

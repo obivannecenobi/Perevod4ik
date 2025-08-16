@@ -6,6 +6,9 @@ from typing import Dict, Optional
 import json
 from urllib import error, request
 
+from ..services.http import create_opener
+from ..settings import AppSettings
+
 
 class QwenTranslator:
     """Translate text using the Qwen model."""
@@ -13,11 +16,14 @@ class QwenTranslator:
     BASE_URL = "https://api.qwen.ai/v1/chat/completions"
     DEFAULT_MODEL = "qwen-turbo"
 
-    def __init__(self, api_key: str, model: str | None = None) -> None:
+    def __init__(
+        self, api_key: str, model: str | None = None, *, settings: AppSettings | None = None
+    ) -> None:
         self.api_key = api_key
         if not self.api_key:
             raise ValueError("Qwen API key not provided")
         self.model = model or self.DEFAULT_MODEL
+        self._opener = create_opener(settings)
 
     # ------------------------------------------------------------------
     def translate(
@@ -54,7 +60,7 @@ class QwenTranslator:
         )
 
         try:
-            with request.urlopen(req) as resp:
+            with self._opener.open(req) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
         except error.HTTPError as exc:  # pragma: no cover - network/IO safety
             message = exc.read().decode("utf-8", errors="ignore")

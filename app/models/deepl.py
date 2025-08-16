@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 import json
 from urllib import error, parse, request
+
+from ..services.http import create_opener
+from ..settings import AppSettings
+
 
 class DeepLTranslator:
     """Simple wrapper around the DeepL HTTP API.
@@ -19,10 +23,11 @@ class DeepLTranslator:
     #: to ``api.deepl.com`` for a paid subscription.
     BASE_URL = "https://api-free.deepl.com/v2/translate"
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, api_key: str, *, settings: AppSettings | None = None) -> None:
         self.api_key = api_key
         if not self.api_key:
             raise ValueError("DeepL API key not provided")
+        self._opener = create_opener(settings)
 
     # ------------------------------------------------------------------
     def translate(
@@ -60,7 +65,7 @@ class DeepLTranslator:
         req = request.Request(self.BASE_URL, data=data, headers=headers)
 
         try:
-            with request.urlopen(req) as resp:
+            with self._opener.open(req) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
         except error.HTTPError as exc:  # pragma: no cover - network/IO safety
             message = exc.read().decode("utf-8", errors="ignore")
