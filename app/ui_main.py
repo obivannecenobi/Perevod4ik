@@ -27,6 +27,7 @@ from .services.synonyms import fetch_synonyms as fetch_synonyms_datamuse
 from .models import fetch_synonyms_llm, _MODELS
 from .diff_utils import DiffHighlighter
 from .project_manager import Project, ProjectManager
+from .services.project import ProjectManager as ProjectDataManager
 
 def resource_path(name: str) -> str:
     """Return absolute path to resource, compatible with PyInstaller."""
@@ -60,6 +61,7 @@ class Ui_MainWindow(object):
 
         # Project tree dock
         self.project_manager = ProjectManager()
+        self.project_service = ProjectDataManager()
         self.project_dock = QtWidgets.QDockWidget(parent=MainWindow)
         self.project_widget = QtWidgets.QWidget()
         self.project_layout = QtWidgets.QVBoxLayout(self.project_widget)
@@ -94,7 +96,9 @@ class Ui_MainWindow(object):
             QtCore.Qt.Orientation.Horizontal, parent=self.project_widget
         )
         self.project_splitter.addWidget(self.project_tree)
-        self.project_splitter.addWidget(QtWidgets.QWidget())
+        self.project_summary = QtWidgets.QTextEdit(parent=self.project_widget)
+        self.project_summary.setReadOnly(True)
+        self.project_splitter.addWidget(self.project_summary)
         self.project_splitter.setSizes([200, 0])
         self.project_layout.addWidget(self.project_splitter)
         self.project_btn_layout = QtWidgets.QHBoxLayout()
@@ -120,6 +124,9 @@ class Ui_MainWindow(object):
         self.delete_project_btn.clicked.connect(self._delete_project)
         self.select_icon_btn.clicked.connect(self._choose_project_icon)
         self._refresh_project_tree()
+        self.project_tree.selectionModel().currentChanged.connect(
+            self._display_project_summary
+        )
 
         # Project list and icon selection
         self.project_list = QtWidgets.QListWidget(parent=self.centralwidget)
@@ -715,6 +722,17 @@ class Ui_MainWindow(object):
                 self.active_root.appendRow(item)
         self.project_tree.expandAll()
 
+    def _display_project_summary(
+        self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex
+    ) -> None:
+        proj = self._selected_project()
+        if not proj:
+            self.project_summary.clear()
+            return
+        meta = self.project_service.load(proj.id, title=proj.name)
+        lines = [f"{ch.name}: {ch.plot}" for ch in meta.chapters]
+        self.project_summary.setPlainText("\n".join(lines))
+
     def _create_project(self) -> None:
         name, ok = QtWidgets.QInputDialog.getText(
             self.project_widget, "Новый проект", "Название проекта:"
@@ -818,6 +836,9 @@ class Ui_MainWindow(object):
         self.rename_project_btn.setText(_translate("MainWindow", "Переименовать"))
         self.archive_project_btn.setText(_translate("MainWindow", "Архивировать"))
         self.delete_project_btn.setText(_translate("MainWindow", "Удалить"))
+        self.project_summary.setPlaceholderText(
+            _translate("MainWindow", "Информация о проекте")
+        )
         self.select_icon_btn.setText(_translate("MainWindow", "Иконка"))
         self.active_root.setText(_translate("MainWindow", "Активные"))
         self.archived_root.setText(_translate("MainWindow", "Архив"))

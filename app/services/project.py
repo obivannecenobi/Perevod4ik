@@ -11,32 +11,35 @@ from docx import Document
 
 
 @dataclass
+class Chapter:
+    """Metadata for a single chapter."""
+
+    name: str
+    names: list[str] = field(default_factory=list)
+    locations: list[str] = field(default_factory=list)
+    plot: str = ""
+
+
+@dataclass
 class Project:
     """Representation of a translation project."""
 
     id: str
     title: str
     icon_path: str = "assets/empty_project.png"
-    chapters: list[dict] = field(default_factory=list)
+    chapters: list[Chapter] = field(default_factory=list)
 
 
 def _extract_metadata(text: str) -> Dict[str, List[str] | str]:
-    """Very lightweight metadata extraction from *text*.
-
-    The implementation uses simple heuristics to collect capitalised words as
-    potential names. Other fields are left empty for further manual refinement
-    or future improvements.
-    """
+    """Very lightweight metadata extraction from *text*."""
 
     words = [w.strip(".,!?;:\"'()[]") for w in text.split()]
     names = sorted({w for w in words if w.istitle()})
-    summary = text.splitlines()[0][:200] if text else ""
+    plot = text.splitlines()[0][:200] if text else ""
     return {
         "names": names,
         "locations": [],
-        "characters": [],
-        "summary": summary,
-        "notes": "",
+        "plot": plot,
     }
 
 
@@ -56,6 +59,7 @@ class ProjectManager:
             with path.open("r", encoding="utf-8") as fh:
                 data = json.load(fh)
             data.setdefault("icon_path", "assets/empty_project.png")
+            data["chapters"] = [Chapter(**c) for c in data.get("chapters", [])]
             return Project(**data)
         return Project(id=project_id, title=title or project_id)
 
@@ -74,7 +78,7 @@ class ProjectManager:
         """Append a chapter entry and save associated files."""
 
         meta = _extract_metadata(text)
-        project.chapters.append({"name": name, **meta})
+        project.chapters.append(Chapter(name=name, **meta))
         self._save_chapter_docx(project.id, name, text)
         self.save(project)
 
@@ -96,5 +100,5 @@ class ProjectManager:
 
         parts: list[str] = []
         for chapter in project.chapters[:upto]:
-            parts.append(f"{chapter['name']}: {chapter.get('summary', '')}")
+            parts.append(f"{chapter.name}: {chapter.plot}")
         return "\n".join(parts)
