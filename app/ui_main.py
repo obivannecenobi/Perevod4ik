@@ -324,8 +324,6 @@ class Ui_MainWindow(object):
         self.main_splitter.addWidget(self.v_splitter)
         self.main_splitter.addWidget(self.glossary_widget)
         self.main_layout.addWidget(self.main_splitter)
-        self.main_layout.setStretch(1, 1)  # splitter fills space
-        self.main_layout.setStretch(2, 0)  # mini-prompt keeps minimal height
         self._splitter_sizes = self.main_splitter.sizes()
 
         self.glossary_combo.currentIndexChanged.connect(self._on_glossary_selected)
@@ -351,6 +349,8 @@ class Ui_MainWindow(object):
         self.timer_label.setFont(QtGui.QFont(styles.HEADER_FONT, 10))
         self.status_layout.addWidget(self.timer_label)
         self.main_layout.addLayout(self.status_layout)
+        self.main_layout.setStretch(3, 1)  # splitter fills remaining space
+        self.main_layout.setStretch(4, 0)  # status bar keeps minimal height
 
         # Fonts
         base_font = QtGui.QFont(styles.INTER_FONT, self.settings.font_size)
