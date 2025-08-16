@@ -60,6 +60,10 @@ class AppSettings:
         Accent colour for focused elements.
     text_color:
         Default text colour for widgets.
+    header_font:
+        Font family used for headers and menus.
+    base_font:
+        Font family used for editable text and tables.
     font_size:
         Base font size for text areas and tables.
     neon_color:
@@ -98,6 +102,8 @@ class AppSettings:
     app_background: str = styles.APP_BACKGROUND
     accent_color: str = styles.ACCENT_COLOR
     text_color: str = styles.TEXT_COLOR
+    header_font: str = styles.HEADER_FONT
+    base_font: str = styles.INTER_FONT
     neon_color: str = styles.ACCENT_COLOR
     neon_intensity: int = 20
     neon_width: int = 10
@@ -136,6 +142,8 @@ class AppSettings:
         qs.setValue("app_background", self.app_background)
         qs.setValue("accent_color", self.accent_color)
         qs.setValue("text_color", self.text_color)
+        qs.setValue("header_font", self.header_font)
+        qs.setValue("base_font", self.base_font)
         qs.setValue("font_size", self.font_size)
         qs.setValue("neon_color", self.neon_color)
         qs.setValue("neon_intensity", self.neon_intensity)
@@ -174,6 +182,8 @@ class AppSettings:
             app_background=qs.value("app_background", styles.APP_BACKGROUND, str),
             accent_color=qs.value("accent_color", styles.ACCENT_COLOR, str),
             text_color=qs.value("text_color", styles.TEXT_COLOR, str),
+            header_font=qs.value("header_font", styles.HEADER_FONT, str),
+            base_font=qs.value("base_font", styles.INTER_FONT, str),
             font_size=qs.value("font_size", 10, int),
             neon_color=qs.value("neon_color", styles.ACCENT_COLOR, str),
             neon_intensity=qs.value("neon_intensity", 20, int),
@@ -409,6 +419,14 @@ class SettingsDialog(QtWidgets.QDialog):
         text_layout.addWidget(self.text_color_btn)
         layout.addRow("Цвет текста", text_layout)
 
+        self.header_font_combo = QtWidgets.QFontComboBox()
+        self.header_font_combo.setCurrentFont(QtGui.QFont(settings.header_font))
+        layout.addRow("Шрифт заголовков", self.header_font_combo)
+
+        self.base_font_combo = QtWidgets.QFontComboBox()
+        self.base_font_combo.setCurrentFont(QtGui.QFont(settings.base_font))
+        layout.addRow("Базовый шрифт", self.base_font_combo)
+
         self.font_size_spin = QtWidgets.QSpinBox()
         self.font_size_spin.setRange(6, 48)
         self.font_size_spin.setValue(settings.font_size)
@@ -626,6 +644,8 @@ class SettingsDialog(QtWidgets.QDialog):
         self.settings.app_background = self.app_bg_edit.text()
         self.settings.accent_color = self.accent_color_edit.text()
         self.settings.text_color = self.text_color_edit.text()
+        self.settings.header_font = self.header_font_combo.currentFont().family()
+        self.settings.base_font = self.base_font_combo.currentFont().family()
         self.settings.highlight_color = self._color.name(
             QtGui.QColor.NameFormat.HexArgb
         )
