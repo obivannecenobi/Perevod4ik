@@ -319,7 +319,8 @@ class Ui_MainWindow(object):
         self.main_splitter.addWidget(self.v_splitter)
         self.main_splitter.addWidget(self.glossary_widget)
         self.main_layout.addWidget(self.main_splitter)
-        self.main_layout.setStretch(1, 1)
+        self.main_layout.setStretch(1, 1)  # splitter fills space
+        self.main_layout.setStretch(2, 0)  # mini-prompt keeps minimal height
         self._splitter_sizes = self.main_splitter.sizes()
 
         self.glossary_combo.currentIndexChanged.connect(self._on_glossary_selected)
