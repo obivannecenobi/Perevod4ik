@@ -50,11 +50,13 @@ def neon_glow_rule(color: str, intensity: int, width: int) -> str:
     color:
         Hex representation of the glow colour.
     intensity:
-        Desired glow intensity (reserved for future use).
+        Desired glow intensity (currently unused).
     width:
         Border width for the glow effect.
     """
 
+    # ``intensity`` is kept for backward compatibility; only ``width``
+    # influences the resulting border thickness at the moment.
     selectors = [
         "QTextEdit:focus",
         "QTextEdit:hover",

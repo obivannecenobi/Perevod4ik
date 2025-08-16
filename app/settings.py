@@ -372,6 +372,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.neon_width_spin = QtWidgets.QSpinBox()
         self.neon_width_spin.setRange(1, 50)
         self.neon_width_spin.setValue(settings.neon_width)
+        self.neon_width_spin.setSuffix(" px")
 
         self.neon_preview = QtWidgets.QFrame()
         self.neon_preview.setFixedSize(40, 20)
