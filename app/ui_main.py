@@ -99,15 +99,14 @@ class Ui_MainWindow(object):
         self.project_layout.addWidget(self.project_splitter)
         self.project_btn_layout = QtWidgets.QHBoxLayout()
         self.create_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
-        self.rename_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
         self.archive_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
         self.delete_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
-        self.select_icon_btn = QtWidgets.QPushButton(parent=self.project_widget)
+        self.create_project_btn.setToolTip("Создать проект")
+        self.archive_project_btn.setToolTip("Архивировать / Разархивировать")
+        self.delete_project_btn.setToolTip("Удалить проект")
         self.project_btn_layout.addWidget(self.create_project_btn)
-        self.project_btn_layout.addWidget(self.rename_project_btn)
         self.project_btn_layout.addWidget(self.archive_project_btn)
         self.project_btn_layout.addWidget(self.delete_project_btn)
-        self.project_btn_layout.addWidget(self.select_icon_btn)
         self.project_layout.addLayout(self.project_btn_layout)
         self.project_dock.setWidget(self.project_widget)
         MainWindow.addDockWidget(
@@ -115,22 +114,18 @@ class Ui_MainWindow(object):
         )
 
         self.create_project_btn.clicked.connect(self._create_project)
-        self.rename_project_btn.clicked.connect(self._rename_project)
         self.archive_project_btn.clicked.connect(self._archive_project)
         self.delete_project_btn.clicked.connect(self._delete_project)
-        self.select_icon_btn.clicked.connect(self._choose_project_icon)
         self._refresh_project_tree()
         self.project_tree.selectionModel().currentChanged.connect(
             self._display_project_summary
         )
-
-        # Project list and icon selection
-        self.project_list = QtWidgets.QListWidget(parent=self.centralwidget)
-        self.project_list.setIconSize(QtCore.QSize(32, 32))
-        self.main_layout.addWidget(self.project_list)
-
-        self.project_icon_btn = QtWidgets.QPushButton("Выбрать иконку", parent=self.centralwidget)
-        self.main_layout.addWidget(self.project_icon_btn)
+        self.project_tree.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        self.project_tree.customContextMenuRequested.connect(
+            self._project_context_menu
+        )
 
         # Menu bar
         self.menu_bar = MainWindow.menuBar()
@@ -742,6 +737,22 @@ class Ui_MainWindow(object):
         lines = [f"{ch.name}: {ch.plot}" for ch in meta.chapters]
         self.project_summary.setPlainText("\n".join(lines))
 
+    def _project_context_menu(self, pos: QtCore.QPoint) -> None:
+        index = self.project_tree.indexAt(pos)
+        if index.isValid():
+            self.project_tree.setCurrentIndex(index)
+        proj = self._selected_project()
+        if not proj:
+            return
+        menu = QtWidgets.QMenu(self.project_tree)
+        rename_action = menu.addAction("Переименовать")
+        icon_action = menu.addAction("Сменить иконку")
+        action = menu.exec(self.project_tree.mapToGlobal(pos))
+        if action == rename_action:
+            self._rename_project()
+        elif action == icon_action:
+            self._choose_project_icon()
+
     def _create_project(self) -> None:
         name, ok = QtWidgets.QInputDialog.getText(
             self.project_widget, "Новый проект", "Название проекта:"
@@ -838,14 +849,12 @@ class Ui_MainWindow(object):
         self.add_pair_btn.setText(_translate("MainWindow", "Добавить"))
         self.remove_pair_btn.setText(_translate("MainWindow", "Удалить"))
         self.project_dock.setWindowTitle(_translate("MainWindow", "Проекты"))
-        self.create_project_btn.setText(_translate("MainWindow", "Создать"))
-        self.rename_project_btn.setText(_translate("MainWindow", "Переименовать"))
-        self.archive_project_btn.setText(_translate("MainWindow", "Архивировать"))
-        self.delete_project_btn.setText(_translate("MainWindow", "Удалить"))
+        self.create_project_btn.setText(_translate("MainWindow", "+"))
+        self.archive_project_btn.setText(_translate("MainWindow", "⇄"))
+        self.delete_project_btn.setText(_translate("MainWindow", "✖"))
         self.project_summary.setPlaceholderText(
             _translate("MainWindow", "Информация о проекте")
         )
-        self.select_icon_btn.setText(_translate("MainWindow", "Иконка"))
         self.active_root.setText(_translate("MainWindow", "Активные"))
         self.archived_root.setText(_translate("MainWindow", "Архив"))
 
