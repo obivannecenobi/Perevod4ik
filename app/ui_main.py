@@ -64,6 +64,23 @@ class Ui_MainWindow(object):
         self.project_widget = QtWidgets.QWidget()
         self.project_layout = QtWidgets.QVBoxLayout(self.project_widget)
         self.project_tree = QtWidgets.QTreeView(parent=self.project_widget)
+        self.project_tree.setStyleSheet(
+            """
+            QTreeView::item:selected {
+                background-color: #39ff14;
+                border: 1px solid #39ff14;
+                color: black;
+            }
+            QTreeView::item:selected:!active {
+                background-color: #39ff14;
+                border: 1px solid #39ff14;
+                color: black;
+            }
+            """
+        )
+        self.project_tree.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
+        )
         self.project_model = QStandardItemModel()
         self.project_model.setHorizontalHeaderLabels(["Projects"])
         self.active_root = QStandardItem()
@@ -73,7 +90,13 @@ class Ui_MainWindow(object):
         self.project_tree.setModel(self.project_model)
         self.project_tree.setIconSize(QtCore.QSize(32, 32))
         self.project_tree.expandAll()
-        self.project_layout.addWidget(self.project_tree)
+        self.project_splitter = QtWidgets.QSplitter(
+            QtCore.Qt.Orientation.Horizontal, parent=self.project_widget
+        )
+        self.project_splitter.addWidget(self.project_tree)
+        self.project_splitter.addWidget(QtWidgets.QWidget())
+        self.project_splitter.setSizes([200, 0])
+        self.project_layout.addWidget(self.project_splitter)
         self.project_btn_layout = QtWidgets.QHBoxLayout()
         self.create_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
         self.rename_project_btn = QtWidgets.QPushButton(parent=self.project_widget)
