@@ -30,10 +30,10 @@ QTextEdit:focus,
 QTextEdit:hover,
 QLineEdit:focus,
 QLineEdit:hover,
-QTableView#glossary:focus,
-QTableView#glossary:hover,
 QPushButton:focus,
-QPushButton:hover {{
+QPushButton:hover,
+QTableView#glossary:focus,
+QTableView#glossary:hover {{
     border: 1px solid {color};
 }}
 """.strip()
@@ -61,10 +61,10 @@ QTextEdit:focus,
 QTextEdit:hover,
 QLineEdit:focus,
 QLineEdit:hover,
-QTableView#glossary:focus,
-QTableView#glossary:hover,
 QPushButton:focus,
-QPushButton:hover {{
+QPushButton:hover,
+QTableView#glossary:focus,
+QTableView#glossary:hover {{
     border: {width}px solid {color};
 }}
 """.strip()
