@@ -25,18 +25,17 @@ FONT_DIR = Path(__file__).resolve().parent / "fonts"
 def focus_hover_rule(color: str) -> str:
     """Return a QSS snippet highlighting widgets on focus/hover."""
 
-    return f"""
-QTextEdit:focus,
-QTextEdit:hover,
-QLineEdit:focus,
-QLineEdit:hover,
-QPushButton:focus,
-QPushButton:hover,
-QTableView#glossary:focus,
-QTableView#glossary:hover {{
-    border: 1px solid {color};
-}}
-""".strip()
+    selectors = [
+        "QTextEdit:focus",
+        "QTextEdit:hover",
+        "QLineEdit:focus",
+        "QLineEdit:hover",
+        "QPushButton:focus",
+        "QPushButton:hover",
+        "QTableView#glossary:focus",
+        "QTableView#glossary:hover",
+    ]
+    return ",\n".join(selectors) + f" {{\n    border: 1px solid {color};\n}}"
 
 
 def neon_glow_rule(color: str, intensity: int, width: int) -> str:
@@ -56,18 +55,17 @@ def neon_glow_rule(color: str, intensity: int, width: int) -> str:
         Border width for the glow effect.
     """
 
-    return f"""
-QTextEdit:focus,
-QTextEdit:hover,
-QLineEdit:focus,
-QLineEdit:hover,
-QPushButton:focus,
-QPushButton:hover,
-QTableView#glossary:focus,
-QTableView#glossary:hover {{
-    border: {width}px solid {color};
-}}
-""".strip()
+    selectors = [
+        "QTextEdit:focus",
+        "QTextEdit:hover",
+        "QLineEdit:focus",
+        "QLineEdit:hover",
+        "QPushButton:focus",
+        "QPushButton:hover",
+        "QTableView#glossary:focus",
+        "QTableView#glossary:hover",
+    ]
+    return ",\n".join(selectors) + f" {{\n    border: {width}px solid {color};\n}}"
 
 
 def _register_font(filename: str) -> str | None:
