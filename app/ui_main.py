@@ -46,8 +46,6 @@ class Ui_MainWindow(object):
         self.settings = settings or AppSettings.load()
         styles.init(self.settings)
         self.current_glossary: Glossary | None = None
-        self._current_word: str = ""
-        self._current_context: str = ""
         self._updating_translation = False
 
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
@@ -212,6 +210,12 @@ class Ui_MainWindow(object):
         self.translation_edit.customContextMenuRequested.connect(
             self._show_synonym_menu
         )
+        self.synonym_action = QtGui.QAction(parent=self.translation_edit)
+        self.synonym_action.setShortcut(QtGui.QKeySequence("Ctrl+Space"))
+        self.synonym_action.triggered.connect(
+            self._show_synonym_menu_at_cursor
+        )
+        self.translation_edit.addAction(self.synonym_action)
         self.translation_counter = QtWidgets.QLabel("0", parent=self.translation_widget)
         self.translation_counter.setObjectName("counter")
         self.translation_counter.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
@@ -369,9 +373,6 @@ class Ui_MainWindow(object):
         self.translation_timer.setSingleShot(True)
         self.translation_timer.timeout.connect(self._commit_translation_change)
         self.translation_edit.textChanged.connect(self._on_translation_changed)
-        self.translation_edit.cursorPositionChanged.connect(
-            self._on_cursor_position_changed
-        )
         self.undo_btn.clicked.connect(self._restore_prev)
         self.redo_btn.clicked.connect(self._restore_next)
 
@@ -468,20 +469,10 @@ class Ui_MainWindow(object):
         self.version_manager.add_version(text)
         self.diff_highlighter.update_diff()
 
-    def _on_cursor_position_changed(self) -> None:
+    def _show_synonym_menu_at_cursor(self) -> None:
         cursor = self.translation_edit.textCursor()
-        if not cursor.hasSelection():
-            cursor.select(QtGui.QTextCursor.SelectionType.WordUnderCursor)
-        word = cursor.selectedText().strip()
-        if not word:
-            return
-        text = self.translation_edit.toPlainText()
-        start = max(cursor.selectionStart() - 30, 0)
-        end = min(cursor.selectionEnd() + 30, len(text))
-        self._current_word = word
-        self._current_context = text[start:end]
-        rect = self.translation_edit.cursorRect(cursor)
-        self._show_synonym_menu(rect.bottomRight())
+        pos = self.translation_edit.cursorRect(cursor).bottomRight()
+        self._show_synonym_menu(pos)
 
     def _enable_machine_check(self) -> None:
         if self.morphology_highlighter is None:
