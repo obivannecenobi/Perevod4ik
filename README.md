@@ -25,6 +25,30 @@
 
 Во время перевода `ui_main.py` считывает параметры из `settings.py`, обращается к выбранному клиенту из `models` и использует сервисы для предложений, синхронизации и истории изменений.
 
+## Поддерживаемые модели
+Приложение умеет работать с несколькими LLM и сервисами перевода:
+
+- **Gemini**
+- **DeepL**
+- **Grok**
+- **Qwen**
+
+Для подбора синонимов используется функция `fetch_synonyms_llm`, которая отправляет слово выбранной модели.
+
+API-ключи для всех сервисов хранятся в объекте `AppSettings` (`gemini_key`, `deepl_key`, `grok_key`, `qwen_key`). Функция `get_translator()` читает настройку `model` и инициализирует соответствующий клиент с нужным ключом.
+
+### Переключение модели
+```python
+from app.settings import AppSettings
+from app.models import get_translator
+
+settings = AppSettings.load()
+settings.model = "grok"  # выбор модели
+settings.save()
+
+translator = get_translator(settings.model, settings)
+```
+
 ## Шрифты и иконки
 Все используемые шрифты и графические элементы хранятся в корне репозитория:
 - Шрифты: `Cattedrale[RUSbypenka220]-Regular.ttf`, `Inter-VariableFont_opsz,wght.ttf`.
