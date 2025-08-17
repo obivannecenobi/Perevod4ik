@@ -19,13 +19,12 @@ def ensure_packages() -> None:
 
 
 def configure_qt_platform() -> None:
-    """Configure Qt backend based on environment and system platform."""
-    platform = os.environ.get("QT_QPA_PLATFORM")
-    if platform == "offscreen":
+    """Set QT_QPA_PLATFORM based on current system."""
+    plat = sys.platform
+    if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
         del os.environ["QT_QPA_PLATFORM"]
-        platform = None
-    if platform is None:
-        os.environ["QT_QPA_PLATFORM"] = "windows" if sys.platform.startswith("win") else "xcb"
+    if "QT_QPA_PLATFORM" not in os.environ:
+        os.environ["QT_QPA_PLATFORM"] = "windows" if plat.startswith("win") else "xcb"
 
 if __name__ == "__main__":
     ensure_packages()
