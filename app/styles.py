@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+import logging
 
 from PyQt6 import QtGui
 
@@ -19,7 +20,7 @@ INTER_FONT = "Inter"
 HEADER_FONT = "Cattedrale"
 
 # Directory containing bundled font files
-FONT_DIR = Path(__file__).resolve().parent / "fonts"
+FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
 
 def focus_hover_rule(color: str) -> str:
@@ -73,13 +74,22 @@ def neon_glow_rule(color: str, intensity: int, width: int) -> str:
 
 
 def _register_font(filename: str) -> str | None:
-    """Register *filename* from :data:`FONT_DIR` and return its family."""
+    """Register *filename* from :data:`FONT_DIR` and return its family.
+
+    If the font cannot be loaded, a warning is logged and ``None`` is
+    returned so the caller can fall back to system fonts.
+    """
 
     font_id = QtGui.QFontDatabase.addApplicationFont(str(FONT_DIR / filename))
-    if font_id != -1:
-        families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
-        if families:
-            return families[0]
+    if font_id == -1:
+        logging.warning("Failed to load %s; falling back to system fonts", filename)
+        return None
+
+    families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
+    if families:
+        return families[0]
+
+    logging.warning("Font %s registered but no families found; using system fonts", filename)
     return None
 
 
@@ -91,11 +101,14 @@ def init(settings: Any | None = None) -> None:
     # Register bundled fonts so they are available in font pickers
     if family := _register_font("Inter-VariableFont_opsz,wght.ttf"):
         INTER_FONT = family
+    else:
+        INTER_FONT = QtGui.QFont().defaultFamily()
 
     header_family = _register_font("Cattedrale[RUSbypenka220]-Regular.ttf")
-    if not header_family:
-        raise RuntimeError("Failed to load Cattedrale[RUSbypenka220]-Regular.ttf")
-    HEADER_FONT = header_family
+    if header_family:
+        HEADER_FONT = header_family
+    else:
+        HEADER_FONT = QtGui.QFont().defaultFamily()
 
     if settings is not None:
         APP_BACKGROUND = getattr(settings, "app_background", APP_BACKGROUND)
