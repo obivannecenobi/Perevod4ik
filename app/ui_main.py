@@ -202,7 +202,7 @@ class Ui_MainWindow(object):
             QtCore.Qt.ContextMenuPolicy.CustomContextMenu
         )
         self.translation_edit.customContextMenuRequested.connect(
-            self._show_synonym_menu
+            self._open_translation_context_menu
         )
         self.synonym_action = QtGui.QAction(parent=self.translation_edit)
         self.synonym_action.setShortcut(QtGui.QKeySequence("Ctrl+Space"))
@@ -466,6 +466,14 @@ class Ui_MainWindow(object):
             self.diff_highlighter.set_base(text)
         self.version_manager.add_version(text)
         self.diff_highlighter.update_diff()
+
+    def _open_translation_context_menu(self, pos: QtCore.QPoint) -> None:
+        menu = self.translation_edit.createStandardContextMenu()
+        synonyms_action = menu.addAction("Synonyms")
+        synonyms_action.triggered.connect(
+            lambda: self._show_synonym_menu(pos)
+        )
+        menu.exec(self.translation_edit.mapToGlobal(pos))
 
     def _show_synonym_menu_at_cursor(self) -> None:
         cursor = self.translation_edit.textCursor()
