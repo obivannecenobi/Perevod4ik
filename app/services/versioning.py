@@ -18,6 +18,7 @@ class VersionManager:
     path: Path
     versions: List[Dict[str, Any]] = field(default_factory=list)
     index: int = -1
+    _dirty: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         self.versions = load_versions(self.path)
@@ -32,6 +33,7 @@ class VersionManager:
         del self.versions[self.index + 1 :]
         self.versions.append({"timestamp": datetime.utcnow().isoformat(), "text": text})
         self.index = len(self.versions) - 1
+        self._dirty = True
 
     def undo(self) -> str | None:
         """Step back in history and return the previous text."""
@@ -50,8 +52,11 @@ class VersionManager:
         return None
 
     def flush(self) -> None:
-        """Persist the current version history to disk."""
+        """Persist the current version history to disk if modified."""
+        if not self._dirty:
+            return
         save_versions(self.versions, self.path)
+        self._dirty = False
 
 
 def check_for_updates(repo_path: Path) -> bool:

@@ -364,7 +364,7 @@ class Ui_MainWindow(object):
         self.translation_timer.setInterval(500)
         self.translation_timer.setSingleShot(True)
         self.translation_timer.timeout.connect(self._commit_translation_change)
-        self.translation_edit.textChanged.connect(self._on_translation_changed)
+        self.translation_edit.textChanged.connect(self._update_translation_counter)
         self.undo_btn.clicked.connect(self._restore_prev)
         self.redo_btn.clicked.connect(self._restore_next)
 
@@ -447,7 +447,7 @@ class Ui_MainWindow(object):
     def _update_original_counter(self) -> None:
         self.original_counter.setText(str(len(self.original_edit.toPlainText())))
 
-    def _on_translation_changed(self) -> None:
+    def _update_translation_counter(self) -> None:
         if self._updating_translation:
             return
         self._updating_translation = True
