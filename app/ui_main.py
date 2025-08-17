@@ -9,7 +9,8 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtGui import QIcon, QStandardItem, QStandardItemModel
 
-from . import styles, __version__
+from . import styles
+from . import __version__
 from .services.versioning import VersionManager
 from .services.morphology import MorphologyService, MorphologyHighlighter
 from .services.glossary import (
