@@ -83,12 +83,15 @@ class Ui_MainWindow(object):
         )
         self.project_model = QStandardItemModel()
         self.project_model.setHorizontalHeaderLabels(["Projects"])
-        self.active_root = QStandardItem()
-        self.archived_root = QStandardItem()
+        self.active_root = QStandardItem("Активные проекты")
+        self.active_root.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
+        self.archived_root = QStandardItem("Архив")
+        self.archived_root.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
         self.project_model.appendRow(self.active_root)
         self.project_model.appendRow(self.archived_root)
         self.project_tree.setModel(self.project_model)
         self.project_tree.setIconSize(QtCore.QSize(32, 32))
+        self.project_tree.setHeaderHidden(True)
         self.project_tree.expandAll()
         self.project_splitter = QtWidgets.QSplitter(
             QtCore.Qt.Orientation.Horizontal, parent=self.project_widget
@@ -776,10 +779,13 @@ class Ui_MainWindow(object):
         if not proj:
             return
         menu = QtWidgets.QMenu(self.project_tree)
+        export_action = menu.addAction("Экспорт сводки")
         rename_action = menu.addAction("Переименовать")
         icon_action = menu.addAction("Сменить иконку")
         action = menu.exec(self.project_tree.mapToGlobal(pos))
-        if action == rename_action:
+        if action == export_action:
+            self._export_project_summary()
+        elif action == rename_action:
             self._rename_project()
         elif action == icon_action:
             self._choose_project_icon()
@@ -850,6 +856,18 @@ class Ui_MainWindow(object):
         proj.icon_path = path
         self.project_manager.save()
         self._refresh_project_tree()
+
+    def _export_project_summary(self) -> None:
+        proj = self._selected_project()
+        if not proj:
+            return
+        project = self.project_service.load(proj.id, title=proj.name)
+        path = self.project_service.export_summary(project)
+        QtWidgets.QMessageBox.information(
+            self.project_widget,
+            "Экспорт",
+            f"Сводка сохранена в {path}",
+        )
 
 
     def _on_auto_prompt_toggled(self, checked: bool) -> None:
