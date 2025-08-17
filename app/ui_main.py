@@ -233,7 +233,7 @@ class Ui_MainWindow(object):
         self.mini_prompt_layout.setContentsMargins(0, 0, 0, 0)
         self.mini_prompt_layout.setSpacing(4)
         self.mini_prompt_edit = QtWidgets.QTextEdit(parent=self.mini_prompt_widget)
-        self.mini_prompt_edit.setPlaceholderText("Мини-промпт")
+        self.mini_prompt_edit.setPlaceholderText("Мини‑промпт")
         self.mini_prompt_layout.addWidget(self.mini_prompt_edit)
 
         # Vertical splitter combining editor area and mini-prompt
