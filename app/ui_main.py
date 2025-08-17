@@ -245,8 +245,9 @@ class Ui_MainWindow(object):
         )
         self.v_splitter.addWidget(self.h_splitter)
         self.v_splitter.addWidget(self.mini_prompt_widget)
+        # Allow both the editors and the mini-prompt to resize with the window
         self.v_splitter.setStretchFactor(0, 1)
-        self.v_splitter.setStretchFactor(1, 0)
+        self.v_splitter.setStretchFactor(1, 1)
 
         # Setup diff highlighting for translation edits
         self.diff_highlighter = DiffHighlighter(
@@ -317,6 +318,9 @@ class Ui_MainWindow(object):
         )
         self.main_splitter.addWidget(self.v_splitter)
         self.main_splitter.addWidget(self.glossary_widget)
+        # Make editor area and glossary resize together
+        self.main_splitter.setStretchFactor(0, 1)
+        self.main_splitter.setStretchFactor(1, 1)
         self.main_layout.addWidget(self.main_splitter)
         self._splitter_sizes = self.main_splitter.sizes()
 
@@ -344,8 +348,9 @@ class Ui_MainWindow(object):
         self.timer_label.setFont(QtGui.QFont(self.settings.header_font, 10))
         self.status_layout.addWidget(self.timer_label)
         self.main_layout.addLayout(self.status_layout)
-        self.main_layout.setStretch(3, 1)  # splitter fills remaining space
-        self.main_layout.setStretch(4, 0)  # status bar keeps minimal height
+        # Ensure the main splitter grows with the window while the status bar stays fixed
+        self.main_layout.setStretch(1, 1)  # splitter fills remaining space
+        self.main_layout.setStretch(2, 0)  # status bar keeps minimal height
 
         # Fonts
         base_font = QtGui.QFont(self.settings.base_font, self.settings.font_size)
