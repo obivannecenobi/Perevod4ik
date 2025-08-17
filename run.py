@@ -24,11 +24,8 @@ def configure_qt_platform() -> None:
     if platform == "offscreen":
         del os.environ["QT_QPA_PLATFORM"]
         platform = None
-        print("Предупреждение: QT_QPA_PLATFORM=offscreen удалён.")
     if platform is None:
-        platform = "windows" if sys.platform.startswith("win") else "xcb"
-        os.environ["QT_QPA_PLATFORM"] = platform
-        print(f"Предупреждение: выбран бэкенд '{platform}'.")
+        os.environ["QT_QPA_PLATFORM"] = "windows" if sys.platform.startswith("win") else "xcb"
 
 if __name__ == "__main__":
     ensure_packages()
