@@ -102,3 +102,16 @@ class ProjectManager:
         for chapter in project.chapters[:upto]:
             parts.append(f"{chapter.name}: {chapter.plot}")
         return "\n".join(parts)
+
+    # ------------------------------------------------------------------
+    def export_summary(self, project: Project) -> Path:
+        """Export project overview to a DOCX file and return the path."""
+
+        project_dir = self.base_dir / project.id
+        project_dir.mkdir(parents=True, exist_ok=True)
+        path = project_dir / "summary.docx"
+        doc = Document()
+        for line in self.overview(project, len(project.chapters)).splitlines():
+            doc.add_paragraph(line)
+        doc.save(path)
+        return path
