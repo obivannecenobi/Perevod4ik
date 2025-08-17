@@ -148,6 +148,7 @@ class Ui_MainWindow(object):
         self.nav_layout = QtWidgets.QHBoxLayout()
         self.nav_layout.setContentsMargins(0, 0, 0, 0)
         self.nav_layout.setSpacing(4)
+        # Buttons use QSS for sizing (padding/min-height) instead of fixed metrics
         self.prev_btn = QtWidgets.QPushButton(parent=self.centralwidget)
         self.chapter_combo = QtWidgets.QComboBox(parent=self.centralwidget)
         self.next_btn = QtWidgets.QPushButton(parent=self.centralwidget)

@@ -62,11 +62,13 @@ def neon_glow_rule(color: str, intensity: int, width: int) -> str:
         "QTextEdit:hover",
         "QLineEdit:focus",
         "QLineEdit:hover",
-        "QPushButton:focus",
-        "QPushButton:hover",
         "QTableView#glossary:focus",
         "QTableView#glossary:hover",
     ]
+    selectors.extend([
+        "QPushButton:hover",
+        "QPushButton:focus",
+    ])
     return ",\n".join(selectors) + f" {{\n    border: {width}px solid {color};\n}}"
 
 
