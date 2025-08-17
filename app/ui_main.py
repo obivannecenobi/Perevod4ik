@@ -888,7 +888,9 @@ class Ui_MainWindow(object):
     # --- translations -----------------------------------------------------
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Main Window"))
+        MainWindow.setWindowTitle(
+            _translate("MainWindow", "Main Window") + f" v{__version__}"
+        )
         self.prev_btn.setText(_translate("MainWindow", "⦉"))
         self.next_btn.setText(_translate("MainWindow", "⦊"))
         self.save_btn.setText(_translate("MainWindow", "Сохранить"))
