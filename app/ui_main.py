@@ -99,6 +99,7 @@ class Ui_MainWindow(object):
         self.project_splitter.addWidget(self.project_tree)
         self.project_summary = QtWidgets.QTextEdit(parent=self.project_widget)
         self.project_summary.setReadOnly(True)
+        self.project_summary.setPlaceholderText("Сводка проекта")
         self.project_splitter.addWidget(self.project_summary)
         self.project_splitter.setSizes([200, 0])
         self.project_layout.addWidget(self.project_splitter)
@@ -906,9 +907,6 @@ class Ui_MainWindow(object):
         self.create_project_btn.setText(_translate("MainWindow", "+"))
         self.archive_project_btn.setText(_translate("MainWindow", "⇄"))
         self.delete_project_btn.setText(_translate("MainWindow", "✖"))
-        self.project_summary.setPlaceholderText(
-            _translate("MainWindow", "Информация о проекте")
-        )
         self.active_root.setText(_translate("MainWindow", "Активные"))
         self.archived_root.setText(_translate("MainWindow", "Архив"))
 
