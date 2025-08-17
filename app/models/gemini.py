@@ -72,6 +72,32 @@ def fetch_latest_model(api_key: str, kind: str = "flash", session: requests.Sess
 
     return latest
 
+
+def _verify_model(
+    api_key: str, model: str, session: requests.Session | None = None
+) -> bool:
+    """Return ``True`` if *model* exists for the provided *api_key*.
+
+    The check is performed by listing available models via the public
+    ``ListModels`` endpoint. Any network or API error results in ``False``
+    being returned so callers can handle verification failure uniformly.
+    """
+
+    url = f"{MODELS_URL}?key={api_key}"
+    session = session or create_session()
+    try:
+        resp = session.get(url, timeout=10)
+        resp.raise_for_status()
+        payload = resp.json()
+    except requests.RequestException:  # pragma: no cover - network/IO safety
+        return False
+
+    for info in payload.get("models", []):
+        name = info.get("name", "").split("/")[-1]
+        if name == model:
+            return True
+    return False
+
 class GeminiTranslator:
     """Translate text using Google's Gemini models."""
 
@@ -84,6 +110,20 @@ class GeminiTranslator:
             raise ValueError("Gemini API key not provided")
         self.session = session or create_session(settings)
         self.model = model or fetch_latest_model(api_key, kind=kind, session=self.session)
+
+        if not _verify_model(api_key, self.model, session=self.session):
+            _MODEL_CACHE.clear()
+            try:
+                _CACHE_FILE.unlink()
+            except OSError:  # pragma: no cover - file system safety
+                pass
+            if model is None:
+                self.model = fetch_latest_model(api_key, kind=kind, session=self.session)
+                if _verify_model(api_key, self.model, session=self.session):
+                    return
+            raise RuntimeError(
+                "Selected Gemini model is unavailable. Please update your API key or region settings."
+            )
 
     # ------------------------------------------------------------------
     def translate(
