@@ -13,8 +13,16 @@ REQUIRED_PACKAGES = {
 def ensure_packages() -> None:
     """Install required packages if they are missing."""
     for module, package in REQUIRED_PACKAGES.items():
-        if importlib.util.find_spec(module) is None:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        try:
+            try:
+                __import__(module)
+            except ModuleNotFoundError:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        except AttributeError:
+            # A third-party "importlib" package can shadow the standard library module,
+            # leaving ``importlib.util`` unavailable.
+            if importlib.util.find_spec(module) is None:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 
 def configure_qt_platform() -> None:
