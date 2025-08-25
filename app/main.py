@@ -71,10 +71,6 @@ class MainController:
     # ------------------------------------------------------------------
     # UI setup and shortcuts
     def _init_ui(self) -> None:
-        # project icon setup
-        self.ui.project_icon_btn.clicked.connect(self.choose_project_icon)
-        self._refresh_project_item()
-
         # translate buttons
         self.buttons_layout = QtWidgets.QHBoxLayout()
         self.translate_btn = QtWidgets.QPushButton("Перевести", parent=self.ui.translation_widget)
@@ -126,43 +122,6 @@ class MainController:
         self.export_btn = QtWidgets.QPushButton("Экспорт отчёта", parent=self.ui.centralwidget)
         self.ui.status_layout.insertWidget(0, self.export_btn)
         self.export_btn.clicked.connect(self.export_report)
-    
-    def choose_project_icon(self) -> None:
-        path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self.window,
-            "Выбор иконки",
-            "",
-            "Images (*.png *.jpg *.bmp)"
-        )
-        if not path:
-            return
-        pixmap = QtGui.QPixmap(path)
-        if pixmap.isNull():
-            return
-        pixmap = pixmap.scaled(
-            32,
-            32,
-            QtCore.Qt.AspectRatioMode.KeepAspectRatio,
-            QtCore.Qt.TransformationMode.SmoothTransformation,
-        )
-        self.project.icon_path = path
-        self.project_manager.save(self.project)
-        self._refresh_project_item(pixmap)
-
-    def _refresh_project_item(self, pixmap: QtGui.QPixmap | None = None) -> None:
-        self.ui.project_list.clear()
-        if pixmap is None:
-            pixmap = QtGui.QPixmap(self.project.icon_path)
-            if pixmap.isNull():
-                pixmap = QtGui.QPixmap("assets/empty_project.png")
-            pixmap = pixmap.scaled(
-                32,
-                32,
-                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
-                QtCore.Qt.TransformationMode.SmoothTransformation,
-            )
-        item = QtWidgets.QListWidgetItem(QtGui.QIcon(pixmap), self.project.title)
-        self.ui.project_list.addItem(item)
 
     # ------------------------------------------------------------------
     # Chapter handling
