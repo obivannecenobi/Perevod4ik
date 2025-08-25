@@ -7,14 +7,13 @@ import traceback
 REQUIRED_PACKAGES = {
     "PyQt6": "PyQt6",
     "googleapiclient": "google-api-python-client",
+    "docx": "python-docx",
 }
 
 def ensure_packages() -> None:
     """Install required packages if they are missing."""
     for module, package in REQUIRED_PACKAGES.items():
-        try:
-            importlib.import_module(module)
-        except Exception:
+        if importlib.util.find_spec(module) is None:
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 
